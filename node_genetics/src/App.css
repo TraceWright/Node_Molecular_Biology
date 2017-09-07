@@ -1,0 +1,31 @@
+.App {
+  text-align: center;
+}
+
+.geneProcesser {
+  display: grid;
+  grid-gap: 10px;
+  width: 1200px;
+  margin: auto;
+  padding-top: 20px;
+}
+
+.sequence {
+  grid-area: sequence;
+}
+
+.controls {
+  grid-area: controls;
+  text-align: left!important;
+}
+
+.geneProcesser {
+  grid-template-columns: 20% 20% 20% 20%;
+  grid-template-areas:
+    'controls sequence sequence sequence'
+}
+
+@keyframes App-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
