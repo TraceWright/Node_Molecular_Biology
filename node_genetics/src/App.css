@@ -22,7 +22,7 @@
 .geneProcesser {
   grid-template-columns: 20% 20% 20% 20%;
   grid-template-areas:
-    'controls sequence sequence sequence'
+    'controls controls sequence sequence'
 }
 
 @keyframes App-logo-spin {
