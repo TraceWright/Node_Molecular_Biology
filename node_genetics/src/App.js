@@ -61,6 +61,7 @@ class App extends Component {
     this.setState({ seq: charOutput })
     document.getElementById('seqInput').style.display = 'none'; 
     document.getElementById('submitButton').style.display = 'none';
+    document.getElementById('clearButton').style.display = 'none';    
     document.getElementById('seqDisplay').style.display = 'block'; 
     document.getElementById('controlsSeqInput').style.display = 'none';
     document.getElementById('controlsSeqDisplay').style.display = 'block';  
@@ -70,6 +71,7 @@ class App extends Component {
     this.setState({ seq: '' })
     document.getElementById('seqInput').style.display = 'block'; 
     document.getElementById('submitButton').style.display = 'block';
+    document.getElementById('clearButton').style.display = 'block';        
     document.getElementById('seqDisplay').style.display = 'none'; 
     document.getElementById('controlsSeqInput').style.display = 'block';
     document.getElementById('controlsSeqDisplay').style.display = 'none'; 
@@ -86,7 +88,7 @@ class App extends Component {
                 <h3 style={{textAlign: 'left'}}>Query Sequence</h3><br/><br/>
                 <textarea type="text" id='seqInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '200px', width: '600px'}}></textarea>
                 <button id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.submitSequence}>Submit Query</button>
-                <button style={{ marginTop: '20px'}} onClick={clearTextarea}>Clear Input</button>
+                <button id="clearButton" style={{ marginTop: '20px'}} onClick={clearTextarea}>Clear Input</button>
               </div>
               <div className="seqDisplay" id="seqDisplay" style={{display: 'none'}}>
                 <label style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}>{ this.state.seq }</label>
