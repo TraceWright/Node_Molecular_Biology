@@ -72,12 +72,12 @@ class App extends Component {
           <div className="geneProcesser">
             <div className="sequence">
               <div className="seqInput">
-                <h3 style={{textAlign: 'left'}}>Sequence</h3><br/><br/>
-                <textarea type="text" id='seqInput' name="seq" onChange={ this.handleChange } value={this.state.seq} style={{float: 'left', height: '800px', width: '800px'}}></textarea>
-                <button id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.submitSequence}>Submit Sequence</button>
+                <h3 style={{textAlign: 'left'}}>Query Sequence</h3><br/><br/>
+                <textarea type="text" id='seqInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '200px', width: '800px'}}></textarea>
+                <button id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.submitSequence}>Submit Query</button>
               </div>
               <div className="seqDisplay" id="seqDisplay" style={{display: 'none'}}>
-                <label style={{float: 'left', width: '800px', wordBreak: 'break-all', wordWrap: 'break-word'}}>{this.state.seq}</label>
+                <label style={{float: 'left', textAlign: 'left', width: '800px', wordBreak: 'break-all', wordWrap: 'break-word'}}>{ this.state.seq }</label>
               </div>
             </div>
             <div className="controls" style={{}}>
