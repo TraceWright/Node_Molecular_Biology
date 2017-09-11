@@ -7,10 +7,32 @@ function clearTextarea() {
 
 function tokeniseSequence() {
   let seq = document.getElementById('fileDisplayArea').textContent;
-  console.log(seq);
-  // let seqArray = seq.match(/.{1,4}/g); // TODO: create subsequences of the same length as the query
+  // console.log(seq);
+  let seqArray = seq.match(/.{1,4}/g); // TODO: dynamically create subsequences of the same length as the query
   // console.log(seqArray);
+  createRotations(seqArray);
+}
 
+function createRotations(seqArr) {
+  let sep;
+  let rotationArr = [];
+  let regexArray = [];
+  regexArray[0] = /.{1,3}/g;
+  regexArray[1] = /.{2,2}/g;
+  // rotationArr.map((i) => {
+  //   return [ rotation, rotation, rotation, rotation ];
+  // })
+  for (let i = 0; i < 2; i++) {
+    rotationArr[i] = [];
+    for (let j = 0; j < seqArr.length; j++) {
+      sep = '';
+      sep = seqArr[j].match(regexArray[i]); // TODO: get 2nd rotation
+      j > 0 ? rotationArr[i][j] = sep[1] + sep[0]: rotationArr[i][j] = sep[0]; 
+    }
+    
+    
+  }
+  console.log(rotationArr);
 }
 
 window.onload = function() {
