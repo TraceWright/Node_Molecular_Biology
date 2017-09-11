@@ -5,6 +5,14 @@ function clearTextarea() {
   document.getElementById('seqInput').value = "";  
 }
 
+function tokeniseSequence() {
+  let seq = document.getElementById('fileDisplayArea').textContent;
+  console.log(seq);
+  // let seqArray = seq.match(/.{1,4}/g); // TODO: create subsequences of the same length as the query
+  // console.log(seqArray);
+
+}
+
 window.onload = function() {
   var fileInput = document.getElementById('fileInput');
   var fileDisplayArea = document.getElementById('fileDisplayArea');
@@ -14,8 +22,11 @@ window.onload = function() {
       if (file.type.match(textType)) {
           var reader = new FileReader();
           reader.onload = function(e) {
-              // fileDisplayArea.innerText = reader.result;
-              console.log(reader.result);
+              fileDisplayArea.innerText = reader.result;
+              document.getElementById('createIndexButton').style.display = 'block'; 
+              
+              // console.log(reader.result);
+              // let seqArr = tokeniseSequence(reader.result);
           }
           reader.readAsText(file);    
       } else {
@@ -63,8 +74,8 @@ class App extends Component {
     document.getElementById('submitButton').style.display = 'none';
     document.getElementById('clearButton').style.display = 'none';    
     document.getElementById('seqDisplay').style.display = 'block'; 
-    document.getElementById('controlsSeqInput').style.display = 'none';
-    document.getElementById('controlsSeqDisplay').style.display = 'block';  
+    document.getElementById('searchSeqInput').style.display = 'none';
+    document.getElementById('searchSeqDisplay').style.display = 'block';  
   }
 
   newSequence() {
@@ -73,8 +84,8 @@ class App extends Component {
     document.getElementById('submitButton').style.display = 'block';
     document.getElementById('clearButton').style.display = 'block';        
     document.getElementById('seqDisplay').style.display = 'none'; 
-    document.getElementById('controlsSeqInput').style.display = 'block';
-    document.getElementById('controlsSeqDisplay').style.display = 'none'; 
+    document.getElementById('searchSeqInput').style.display = 'block';
+    document.getElementById('searchSeqDisplay').style.display = 'none'; 
   }
 
 
@@ -83,30 +94,28 @@ class App extends Component {
       <div className="App">
         <div style={{display: 'inlineBlock'}}>
           <div className="geneProcesser">
-            <div className="sequence">
+            <div className="query">
               <div className="seqInput">
                 <h3 style={{textAlign: 'left'}}>Query Sequence</h3><br/><br/>
-                <textarea type="text" id='seqInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '200px', width: '600px'}}></textarea>
+                <textarea type="text" id='seqInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
                 <button id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.submitSequence}>Submit Query</button>
                 <button id="clearButton" style={{ marginTop: '20px'}} onClick={clearTextarea}>Clear Input</button>
               </div>
               <div className="seqDisplay" id="seqDisplay" style={{display: 'none'}}>
-                <label style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}>{ this.state.seq }</label>
+                <label style={{float: 'left', textAlign: 'left', width: '200px', wordBreak: 'break-all', wordWrap: 'break-word'}}>{ this.state.seq }</label>
               </div>
             </div>
-            <div className="controls" style={{}}>
+            <div className="search" style={{}}>
               <h3>Search Sequence</h3><br/><br/>
-              <div className="controlsSeqInput" id="controlsSeqInput">
+              <div className="searchSeqInput" id="searchSeqInput">
               <input type="file" id="fileInput"/>
               <br/><br/><br/>
-                
-              </div>
-              <div className="controlsSeqDisplay" id="controlsSeqDisplay" style={{display: 'none'}}>
+              <button id="createIndexButton" style={{ display: 'none' }} onClick={ tokeniseSequence }>Create Index</button>
               <br/><br/><br/>
-            
-
-        {/* <pre id="fileDisplayArea"></pre> */}
-
+              <label id="fileDisplayArea" style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></label>
+              </div>
+              <div className="searchSeqDisplay" id="searchSeqDisplay" style={{display: 'none'}}>
+              <br/><br/><br/>
               </div>
             </div>
           </div>
