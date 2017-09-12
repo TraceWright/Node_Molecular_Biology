@@ -158,7 +158,7 @@ class App extends Component {
   highlightMatches(saPos) {
     let seq = document.getElementById('fileDisplayArea').textContent;
     // console.log(seq);
-    let target = document.getElementById('fileDisplayArea');
+    let target = document.getElementById('resultDisplayArea');
     for (let i = 0; i < seq.length; i++) {
       var elem = document.createElement('span'),
       text = document.createTextNode(seq[i]);
@@ -167,7 +167,8 @@ class App extends Component {
   // console.log(saStartPos[0]);
 
   if (saPos.indexOf(i) > -1) {
-      elem.style.color = 'green'
+      elem.style.color = 'red'
+      elem.style.fontWeight = 'bold'
   } else {
       elem.style.color = 'black'
   }
@@ -212,7 +213,13 @@ extendMatchArr(saStartPos) {
               <br/><br/><br/>
               <button id="createIndexButton" style={{ display: 'none' }} onClick={ this.tokeniseSequence }>Create Index</button>
               <br/><br/><br/>
+              <label>Uploaded Sequence:</label>
+              <br/><br/>
               <label id="fileDisplayArea" style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></label>
+              <br/><br/><br/>
+              <label>Result Sequence:</label>
+              <br/><br/>
+              <label id="resultDisplayArea" style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></label>
               </div>
               <div className="searchSeqDisplay" id="searchSeqDisplay" style={{display: 'none'}}>
               <br/><br/><br/>
