@@ -118,14 +118,21 @@ class App extends Component {
     // console.log(seq);
     let seqArray = seq.match(/.{1,4}/g); // TODO: dynamically create subsequences of the same length as the query
     // console.log(seqArray);
-    let searchArray = this.createRotations(seqArray);
+    this.createRotations(seqArray);
   }
   
   searchIndex() {
-    // console.log( this.state.seqIndex );
+    console.log( this.state.seqIndex );
     // console.log( this.state.seq )
+    let matchArray = [];
 
-    
+    for (let i = 0; i < this.state.seqIndex.length; i++) {
+      for (let j = 0; j < this.state.seqIndex[i].length; j++) {
+        this.state.seqIndex[i][j] === this.state.seq ? matchArray.push({ rotation: i, position: j }) : null ;
+      }
+    }
+    console.log('ma: ' + matchArray);
+
   } 
 
 
