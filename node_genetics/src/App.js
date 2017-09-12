@@ -19,7 +19,6 @@ window.onload = function() {
             // // console.log(sArr);
             // fileDisplayArea.innerText = sArr;  //TODO: remove commas
             fileDisplayArea.innerText = reader.result;
-            document.getElementById('createIndexButton').style.display = 'block'; 
           }
           reader.readAsText(file);    
       } else {
@@ -70,7 +69,8 @@ class App extends Component {
     document.getElementById('queryInput').style.display = 'none'; 
     document.getElementById('queryDisplay').style.display = 'block'; 
     document.getElementById('submitButton').style.display = 'none';
-    document.getElementById('clearButton').style.display = 'none';    
+    document.getElementById('clearButton').style.display = 'none';
+    document.getElementById('label3').style.display = 'none';
     // document.getElementById('searchQueryInput').style.display = 'none';
     // document.getElementById('searchSeqDisplay').style.display = 'block';  
   }
@@ -196,22 +196,26 @@ extendMatchArr(saStartPos) {
             <div className="query">
               <div className="queryInput">
                 <h3 style={{textAlign: 'left'}}>Query Sequence</h3><br/><br/>
-                <textarea type="text" id='queryInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
+                <textarea placeholder="Enter a 4 base sequence (eg. AATT)" type="text" id='queryInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
+                <label id="label3" style={{float: 'left', marginTop: '20px'}}>3. &nbsp;</label>
                 <button id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.submitSequence}>Submit Query</button>
                 <button id="clearButton" style={{ marginTop: '20px'}} onClick={clearTextarea}>Clear Input</button>
               </div>
               <div className="queryDisplay" id="queryDisplay" style={{display: 'none'}}>
                 <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '200px', wordBreak: 'break-all', wordWrap: 'break-word'}}>{ this.state.seq }</label>
                 <br/><br/><br/>
+                <label style={{float: 'left', textAlign: 'left'}}>4. &nbsp;</label>
                 <button onClick={ this.searchIndex } style={{float: 'left', textAlign: 'left'}}>Search</button>
               </div>
             </div>
             <div className="search" style={{}}>
               <h3>Search Sequence</h3><br/><br/>
               <div className="searchQueryInput" id="searchQueryInput">
+              <label>1. &nbsp;</label>
               <input type="file" id="fileInput"/>
               <br/><br/><br/>
-              <button id="createIndexButton" style={{ display: 'none' }} onClick={ this.tokeniseSequence }>Create Index</button>
+              <label>2. &nbsp;</label>
+              <button id="createIndexButton" onClick={ this.tokeniseSequence }>Create Index</button>
               <br/><br/><br/>
               <label>Uploaded Sequence:</label>
               <br/><br/>
