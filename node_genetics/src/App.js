@@ -14,8 +14,12 @@ window.onload = function() {
       if (file.type.match(textType)) {
           var reader = new FileReader();
           reader.onload = function(e) {
-              fileDisplayArea.innerText = reader.result;
-              document.getElementById('createIndexButton').style.display = 'block'; 
+            // let sArr = [];
+            // sArr = reader.result.split('')
+            // // console.log(sArr);
+            // fileDisplayArea.innerText = sArr;  //TODO: remove commas
+            fileDisplayArea.innerText = reader.result;
+            document.getElementById('createIndexButton').style.display = 'block'; 
           }
           reader.readAsText(file);    
       } else {
@@ -114,8 +118,10 @@ class App extends Component {
   }
 
   tokeniseSequence() {
-    let seq = document.getElementById('fileDisplayArea').textContent;
-    // console.log(seq);
+    let s = document.getElementById('fileDisplayArea').textContent;
+    console.log(s);
+    let seq = s.replace('/,/g' , '')
+    console.log(seq);
     let seqArray = seq.match(/.{1,4}/g); // TODO: dynamically create subsequences of the same length as the query
     // console.log(seqArray);
     this.createRotations(seqArray);
@@ -131,10 +137,55 @@ class App extends Component {
         this.state.seqIndex[i][j] === this.state.seq ? matchArray.push({ rotation: i, position: j }) : null ;
       }
     }
-    console.log('ma: ' + matchArray);
-
+    // console.log('ma: ' + matchArray);
+    let saStartPos = this.calcRelativePosition(matchArray);
+    let saPos = this.extendMatchArr(saStartPos); // TODO: input query length here to extend by a variable length
+    this.highlightMatches(saPos);
   } 
+  
 
+  calcRelativePosition(matches) {
+    let saStartPos = [];
+    for (let i = 0; i < matches.length; i++) {
+      // console.log(matches[i])
+      // console.log(matches[i].rotation)
+      saStartPos.push(4 - matches[i].rotation + (4 * matches[i].position) - 4);
+    }
+    // console.log(saStartPos); fix sasStartPos: is slightly off
+    return saStartPos;
+  }
+
+  highlightMatches(saPos) {
+    let seq = document.getElementById('fileDisplayArea').textContent;
+    // console.log(seq);
+    let target = document.getElementById('fileDisplayArea');
+    for (let i = 0; i < seq.length; i++) {
+      var elem = document.createElement('span'),
+      text = document.createTextNode(seq[i]);
+  elem.appendChild(text);
+  // console.log(seq[i])
+  // console.log(saStartPos[0]);
+
+  if (saPos.indexOf(i) > -1) {
+      elem.style.color = 'green'
+  } else {
+      elem.style.color = 'black'
+  }
+  target.appendChild(elem);
+  }
+}
+
+extendMatchArr(saStartPos) {
+  let positionsArray = [];
+  saStartPos.forEach(function(element) {
+    // console.log(element);
+    for (let i = 0; i < 4; i++) {  // TODO: update hardcoded query length value
+      console.log(element + i);
+      positionsArray.push(element + i);
+    }
+  }, this);
+  return positionsArray;
+}
 
   render() {
     return (
