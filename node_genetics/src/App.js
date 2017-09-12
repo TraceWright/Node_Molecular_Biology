@@ -10,29 +10,39 @@ function tokeniseSequence() {
   // console.log(seq);
   let seqArray = seq.match(/.{1,4}/g); // TODO: dynamically create subsequences of the same length as the query
   // console.log(seqArray);
-  createRotations(seqArray);
+  let searchArray = createRotations(seqArray);
 }
 
 function createRotations(seqArr) {
   let sep;
+  let prev;
   let rotationArr = [];
   let regexArray = [];
-  regexArray[0] = /.{1,3}/g;
-  regexArray[1] = /.{2,2}/g;
-  // rotationArr.map((i) => {
-  //   return [ rotation, rotation, rotation, rotation ];
-  // })
-  for (let i = 0; i < 2; i++) {
+  rotationArr[0] = seqArr;
+  regexArray[1] = /.{1,3}/g;
+  regexArray[2] = /.{2,2}/g;
+  regexArray[3] = /.{1}/g;
+  for (let i = 1; i < 4; i++) {
     rotationArr[i] = [];
-    for (let j = 0; j < seqArr.length; j++) {
+    for (let j = 0; j < seqArr.length - 1; j++) {
       sep = '';
-      sep = seqArr[j].match(regexArray[i]); // TODO: get 2nd rotation
-      j > 0 ? rotationArr[i][j] = sep[1] + sep[0]: rotationArr[i][j] = sep[0]; 
+      sep = seqArr[j].match(regexArray[i]);
+      if (i < 3) {
+        if (j > 0) {
+          rotationArr[i][j] = prev + sep[0];
+          prev = sep[1];
+        }
+        else { 
+          rotationArr[i][j] = sep[0]; 
+          prev = sep[1];
+        }
+      } else {
+        j > 0 ? rotationArr[i][j] = prev + sep[0] : rotationArr[i][j] = sep[0]; // TODO: Add last element to 4th rotation for full coverage
+        prev = sep[1] + sep[2] + sep[3];
+      }      
     }
-    
-    
   }
-  console.log(rotationArr);
+  return rotationArr;
 }
 
 window.onload = function() {
