@@ -1,6 +1,16 @@
 import React, { Component } from 'react';
 import './App.css';
 import * as SW from 'igenius-smith-waterman';
+import * as fs from 'browserify-fs';
+
+fs.mkdir('/home', function() {
+  fs.writeFile('/home/hello-world.txt', 'Hello world!\n', function() {
+      fs.readFile('/home/hello-world.txt', 'utf-8', function(err, data) {
+          console.log(data);
+      });
+  });
+});
+fs.readdir("/home/",function(e,f) {console.log(f);})
 
 function smith_waterman() {
   let seq1 = 'AAAATTTAAGAAAGATGGAGTAAATTTATGTCGGAAAAAGAAATTTGAGT';

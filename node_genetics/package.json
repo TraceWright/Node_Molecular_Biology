@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "browserify-fs": "^1.0.0",
     "igenius-smith-waterman": "^1.1.3",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
