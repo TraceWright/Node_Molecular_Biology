@@ -1,5 +1,22 @@
 import React, { Component } from 'react';
 import './App.css';
+import * as SW from 'igenius-smith-waterman';
+
+function smith_waterman() {
+  let seq1 = 'AAAATTTAAGAAAGATGGAGTAAATTTATGTCGGAAAAAGAAATTTGAGT';
+  let seq2 = 'AAAATTTAAGAAAGATGGAGTAAATTTAAGATGGAGTAAATTTATGTCGGAAAAAGAAATTTGAGT';
+  let gss = function (i) {
+    return -i;
+  };
+  let simfunc = function (a, b) {
+    if (a === b) {
+      return 2;
+    } else {
+      return -1;
+    }
+  };
+  SW.align(seq1, seq2, gss, simfunc)
+}
 
 function clearTextarea() {
   document.getElementById('seqInput').value = "";  
@@ -224,9 +241,13 @@ extendMatchArr(saStartPos) {
               <label>Result Sequence:</label>
               <br/><br/>
               <label id="resultDisplayArea" style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></label>
+              <br/><br/><br/>
+              <br/><br/><br/>
+              <button onClick={smith_waterman}>Smith-Waterman</button>
               </div>
               <div className="searchSeqDisplay" id="searchSeqDisplay" style={{display: 'none'}}>
               <br/><br/><br/>
+              
               </div>
             </div>
           </div>
