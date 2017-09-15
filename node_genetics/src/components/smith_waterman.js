@@ -57,6 +57,7 @@ export class Smith_Waterman extends Component {
             if (i % 100 === 0){
                 line1 = document.createElement('div');
                 line2 = document.createElement('div');
+                line1.style.marginTop = '20px';
                 target.appendChild(line1);
                 target.appendChild(line2);
             }
@@ -68,7 +69,10 @@ export class Smith_Waterman extends Component {
             elem2.appendChild(text2);
             line1.appendChild(elem1);
             line2.appendChild(elem2);
-
+            elem1.style.fontFamily = 'Courier New';
+            elem2.style.fontFamily = 'Courier New';
+            elem1.style.textAlign = 'left';
+            elem2.style.textAlign = 'left';
             if (seq1[i] === seq2[i]) {
                 elem1.style.color = 'red';
                 elem1.style.fontWeight = 'bold';
