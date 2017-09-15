@@ -25,6 +25,34 @@
     'search search search query'
 }
 
+.file-uploader {
+  display: grid;  
+  grid-gap: 10px;
+  width: 1200px;
+  margin: auto;
+  padding-top: 20px;
+}
+
+.files {
+  grid-area: fil;
+  height: 50px;
+}
+
+.input-files {
+  grid-area: input;
+}
+
+.uploaded-sequence {
+  grid-area: upld;
+}
+
+.file-uploader {
+  grid-template-columns: 20% 20% 20% 20%;
+  grid-template-areas: 
+  'fil fil fil fil'
+  'input upld upld upld'
+}
+
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
