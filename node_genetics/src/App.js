@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 import './App.css';
-import * as SW from 'igenius-smith-waterman';
 // import * as fs from 'browserify-fs';
 
 import { simple_starter } from './components/simple_starter';
-import { smith_waterman } from './components/smith_waterman';
+import { Smith_Waterman } from './components/smith_waterman';
 
 window.onload = function() {
   let fileInput = document.getElementById('fileInput');
@@ -16,10 +15,6 @@ window.onload = function() {
       if (file.type.match(textType)) {
           var reader = new FileReader();
           reader.onload = function(e) {
-            // let sArr = [];
-            // sArr = reader.result.split('')
-            // // console.log(sArr);
-            // fileDisplayArea.innerText = sArr;  //TODO: remove commas
             fileDisplayArea.innerText = reader.result;
           }
           reader.readAsText(file);    
@@ -38,25 +33,9 @@ window.onload = function() {
 // });
 // fs.readdir("/home/",function(e,f) {console.log(f);})
 
-// function smith_waterm() {
-//   let seq1 = 'AAAATTTAAGAAAGATGGAGTAAATTTATGTCGGAAAAAGAAATTTGAGT';
-//   let seq2 = 'AAAATTTAAGAAAGATGGAGTAAATTTAAGATGGAGTAAATTTATGTCGGAAAAAGAAATTTGAGT';
-//   let gss = function (i) {
-//     return -i;
-//   };
-//   let simfunc = function (a, b) {
-//     if (a === b) {
-//       return 2;
-//     } else {
-//       return -1;
-//     }
-//   };
-//   SW.align(seq1, seq2, gss, simfunc)
-// }
-
 function uploadFiles() {
   document.getElementById('file-uploader').style.display = 'grid'; 
-  // document.getElementById('search-components').style.display = 'none';
+  document.getElementById('search-components').style.display = 'none';
   document.getElementById('uploaded-sequence').style.display = 'grid';  
   document.getElementById('upload-files-btn').style.display = 'none';
   document.getElementById('back-btn').style.display = 'grid';  
@@ -99,7 +78,7 @@ class App extends Component {
             </div>
             <div id="search-components">
               <Route path="/simple_starter" component={simple_starter}/>
-              <Route path="/smith_waterman" component={smith_waterman}/>
+              <Route path="/smith_waterman" component={Smith_Waterman}/>
             </div>
           </div>
         </div>
