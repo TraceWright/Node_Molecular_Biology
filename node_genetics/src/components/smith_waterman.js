@@ -84,12 +84,13 @@ export class Smith_Waterman extends Component {
 
       render() {
         return (
-            <div>
-                <button onClick={ this.smith_waterm }>Smith-Waterman</button>
+            <div className="smith-waterman">
+                <br/><br/>
+                <button className='bttn' onClick={ this.smith_waterm }>Run Smith-Waterman Algorithm</button>
                 <br/><br/><br/>
-                <button id="createIndexButton" onClick={ this.takeSequence }>Create Index</button>
+                <button className='bttn' id="createIndexButton" onClick={ this.takeSequence }>Save Uploaded Sequence to SW Search State</button>
                 <br/><br/><br/>
-                <textarea placeholder="Enter a Query Sequence" type="text" id='' name="seq2" onChange={ this.handleChange } value={ this.state.seq2 } style={{ height: '100px', width: '400px'}}></textarea>
+                <textarea placeholder="Enter Query Sequence" type="text" id='' name="seq2" onChange={ this.handleChange } value={ this.state.seq2 } style={{ height: '200px', width: '600px'}}></textarea>
                 <br/><br/><br/>
                 <div id="resultDisplayArea"/>
 

@@ -53,6 +53,16 @@
   'input upld upld upld'
 }
 
+.smith-waterman {
+  height: -webkit-fill-available;
+  background-image: url('genetics_background_2.png');
+  background-position: cover;
+}
+
+.bttn {
+  background: transparent;
+}
+
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
