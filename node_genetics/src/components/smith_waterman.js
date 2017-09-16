@@ -51,6 +51,9 @@ export class Smith_Waterman extends Component {
         let sq1 = seq1.split('');
         let sq2 = seq2.split('');
         let target = document.getElementById('resultDisplayArea');
+        while (target.hasChildNodes()) {
+            target.removeChild(target.lastChild);
+        }
         let line1;
         let line2; 
         for (let i = 0; i < alignment.walk.length; i++) {
