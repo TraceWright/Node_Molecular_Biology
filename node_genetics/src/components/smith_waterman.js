@@ -105,11 +105,14 @@ export class Smith_Waterman extends Component {
         return (
             <div className="smith-waterman">
                 <br/><br/>
+                <label>4. &nbsp;</label>
                 <button className='bttn' onClick={ this.handleMultipleSequences }>Run Smith-Waterman Algorithm</button>
                 <br/><br/><br/>
+                <label>3. &nbsp;</label>
                 <button className='bttn' id="createIndexButton" onClick={ this.takeSequences }>Save Uploaded Sequence/s to SW Search State</button>
                 <br/><br/><br/>
-                <textarea placeholder="Enter Query Sequence" type="text" id='' name="querySeq" onChange={ this.handleChange } value={ this.state.querySeq } style={{ height: '200px', width: '600px'}}></textarea>
+                <div style={{ textAlign: 'left', width: '600px', margin: 'auto'}}>2. &nbsp;</div>
+                <textarea placeholder="Enter Query Sequence (ACGT characters only)" type="text" id='' name="querySeq" onChange={ this.handleChange } value={ this.state.querySeq } style={{ height: '200px', width: '600px'}}></textarea>
                 <br/><br/><br/>
                 <div id="resultDisplayArea"/>
 

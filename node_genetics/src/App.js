@@ -85,7 +85,8 @@ class App extends Component {
          <div style={{display: 'inlineBlock'}}>
           <div>
             <div className="files">
-              <button className='bttn' id="upload-files-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px' }} onClick={ uploadFilesPage }>Upload File/s</button>
+            <label style={{ float: 'left', marginTop: '20px', marginLeft: '20px' }}>1. &nbsp;</label>
+              <button  className='bttn' id="upload-files-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '0px' }} onClick={ uploadFilesPage }>Upload File/s</button>
               <button className='bttn' id="back-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px', display: 'none' }} onClick={ back }>Back</button>
             </div>
 
