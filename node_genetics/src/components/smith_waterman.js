@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import '../App.css';
 import * as SW from 'igenius-smith-waterman';
+import * as fs from 'browserify-fs';
 
 export class Smith_Waterman extends Component {
     constructor(props) {
@@ -9,12 +10,13 @@ export class Smith_Waterman extends Component {
         this.state = {
             seq1: [],
             seq2: [],
-            optimalAlignment: []
+            optimalAlignment: [], 
+            sequences: []
           }
 
         this.handleChange = this.handleChange.bind(this); 
         this.smith_waterm = this.smith_waterm.bind(this);
-        this.takeSequence = this.takeSequence.bind(this); 
+        this.takeSequences = this.takeSequences.bind(this); 
         
     }
 
@@ -41,10 +43,20 @@ export class Smith_Waterman extends Component {
       this.highlightMatches(alignment, alignment.str1, alignment.str2);
     }
 
-    takeSequence() {
-        let s = document.getElementById('fileDisplayArea').textContent;
-        console.log(s) 
-        this.setState({ seq1: s })
+    takeSequences() {
+        let newState = [];
+        fs.readdir('/home', function(e,f) {
+            // console.log(f);
+          
+            f.forEach(function(element) {
+                fs.readFile(`/home/${element}`, 'utf-8', function(err, data) {
+                    // console.log('data:' + data);
+                    newState.push(data);
+                    console.log('ns: ' + newState)
+                });
+            });
+        });
+        this.setState({ sequences: newState });
       }
 
     highlightMatches(alignment, seq1, seq2) {
@@ -91,7 +103,7 @@ export class Smith_Waterman extends Component {
                 <br/><br/>
                 <button className='bttn' onClick={ this.smith_waterm }>Run Smith-Waterman Algorithm</button>
                 <br/><br/><br/>
-                <button className='bttn' id="createIndexButton" onClick={ this.takeSequence }>Save Uploaded Sequence to SW Search State</button>
+                <button className='bttn' id="createIndexButton" onClick={ this.takeSequences }>Save Uploaded Sequence/s to SW Search State</button>
                 <br/><br/><br/>
                 <textarea placeholder="Enter Query Sequence" type="text" id='' name="seq2" onChange={ this.handleChange } value={ this.state.seq2 } style={{ height: '200px', width: '600px'}}></textarea>
                 <br/><br/><br/>

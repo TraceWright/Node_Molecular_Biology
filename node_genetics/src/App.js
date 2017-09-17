@@ -7,12 +7,14 @@ import { simple_starter } from './components/simple_starter';
 import { Smith_Waterman } from './components/smith_waterman';
 
 function uploadFile(fileName, fileText) {
-  // console.log(fileName);
-  // console.log(fileText);
+  let dirContents  = document.getElementById('dir-content');
   fs.mkdir('/home', function() {
     fs.writeFile(`/home/${fileName}`, fileText, function () {
       fs.readFile(`/home/${fileName}`, 'utf-8', function(err, data) {
-        //console.log(data);
+        fs.readdir('/home', function(e, f) {
+          let fileList = f.toString().split(',').join('\r\n');
+          dirContents.innerText = fileList;
+        }); 
       });
     });
   });
@@ -22,46 +24,45 @@ window.onload = function() {
   let fileInput = document.getElementById('fileInput');
   let fileDisplayArea = document.getElementById('fileDisplayArea');
   let dirContents  = document.getElementById('dir-content');
-  console.log('dc: ' + dirContents)
   let fileList;
+
+  fs.readdir('/home', function(e, f) {
+    let fileList = f.toString().split(',').join('\r\n');
+    dirContents.innerText = fileList;
+  });
+
+
   fileInput.addEventListener('change', function(e) {
       var file = fileInput.files[0];
       var textType = /text.*/;
       if (file.type.match(textType)) {
           var reader = new FileReader();
           reader.onload = function(e) {
+            document.getElementById('uploaded-sequence').style.display = 'grid';
             fileDisplayArea.innerText = reader.result;
             uploadFile(fileInput.files[0].name, fileDisplayArea.innerText);
+            
           }
-          reader.readAsText(file);    
+          reader.readAsText(file);      
       } else {
           fileDisplayArea.innerText = "File not supported!"
       }
-
-      fileList = dirContents.innerText + fileInput.files[0].name + '\r\n';
-      dirContents.innerText = fileList;
-
   });
 }
 
 function clearBrowserFiles() {
   let dirContents  = document.getElementById('dir-content');
-  dirContents.innerText = 'Directory Contents: ';
+  dirContents.innerText = '';
     fs.readdir('/home', function(e,f) {
-      console.log(f);
-    
       f.forEach(function(element) {
         fs.unlink('/home/' + element)
-        console.log(element)
       });
-  
     })
   }
 
 function uploadFilesPage() {
   document.getElementById('file-uploader').style.display = 'grid'; 
-  document.getElementById('search-components').style.display = 'none';
-  document.getElementById('uploaded-sequence').style.display = 'grid';  
+  document.getElementById('search-components').style.display = 'none';  
   document.getElementById('upload-files-btn').style.display = 'none';
   document.getElementById('back-btn').style.display = 'grid';  
      
@@ -92,7 +93,8 @@ class App extends Component {
             <div style={{ display: 'none'}} className="file-uploader" id="file-uploader">
 
               <div className="dir-contents">
-                <div id="dir-content">Directory Contents: </div>
+                <label>Directory Contents:</label>
+                <div style={{paddingLeft: '50px', paddingTop: '10px'}} id="dir-content"></div>
               </div>
 
             <div className="clear-dir">
