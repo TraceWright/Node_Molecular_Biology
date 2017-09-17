@@ -25,10 +25,10 @@ window.onload = function() {
   let fileDisplayArea = document.getElementById('fileDisplayArea');
   let dirContents  = document.getElementById('dir-content');
 
-  fs.readdir('/home', function(e, f) {
-    let fileList = f.toString().split(',').join('\r\n');
-    dirContents.innerText = fileList;
-  });
+  // fs.readdir('/home', function(e, f) {
+  //   let fileList = f.toString().split(',').join('\r\n');
+  //   dirContents.innerText = fileList;
+  // });
 
 
   fileInput.addEventListener('change', function(e) {
