@@ -33,6 +33,18 @@
   padding-top: 20px;
 }
 
+.dir-contents {
+  grid-area: dirc;
+  padding-bottom: 20px;
+  text-align: left;
+}
+
+.clear-dir {
+  grid-area: cdir;
+  padding-bottom: 20px;  
+  text-align: left;
+}
+
 .files {
   grid-area: fil;
   height: 50px;
@@ -50,6 +62,8 @@
   grid-template-columns: 20% 20% 20% 20%;
   grid-template-areas: 
   'fil fil fil fil'
+  'dirc dirc dirc dirc'
+  'cdir cdir cdir cdir'
   'input upld upld upld'
 }
 
