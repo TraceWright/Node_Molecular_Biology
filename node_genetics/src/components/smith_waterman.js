@@ -8,16 +8,15 @@ export class Smith_Waterman extends Component {
         super(props);
 
         this.state = {
-            seq1: [],
-            seq2: [],
+            querySeq: [],
             optimalAlignment: [], 
             sequences: []
           }
 
         this.handleChange = this.handleChange.bind(this); 
         this.smith_waterm = this.smith_waterm.bind(this);
-        this.takeSequences = this.takeSequences.bind(this); 
-        
+        this.takeSequences = this.takeSequences.bind(this);
+        this.handleMultipleSequences = this.handleMultipleSequences.bind(this);
     }
 
     handleChange({ target }) {
@@ -26,9 +25,7 @@ export class Smith_Waterman extends Component {
           });
       }
 
-    smith_waterm() {
-      let seq1 = this.state.seq1;
-      let seq2 = this.state.seq2; 
+    smith_waterm(seq1, seq2) {
       let gss = function (i) {
         return -i;
       };
@@ -40,19 +37,26 @@ export class Smith_Waterman extends Component {
         }
       };
       let alignment = SW.align(seq1, seq2, gss, simfunc);
-      this.highlightMatches(alignment, alignment.str1, alignment.str2);
+      return alignment;
+    }
+
+    handleMultipleSequences() {
+        let resultsArray = [];
+        for (let i = 0; i < this.state.sequences.length; i++) {
+            let result = this.smith_waterm(this.state.sequences[i], this.state.querySeq);
+            resultsArray.push(result);
+        }
+        for (let i = 0; i < resultsArray.length; i++) {
+           this.highlightMatches(resultsArray[i], resultsArray[i].str1, resultsArray[i].str2);
+        }
     }
 
     takeSequences() {
         let newState = [];
         fs.readdir('/home', function(e,f) {
-            // console.log(f);
-          
             f.forEach(function(element) {
                 fs.readFile(`/home/${element}`, 'utf-8', function(err, data) {
-                    // console.log('data:' + data);
                     newState.push(data);
-                    console.log('ns: ' + newState)
                 });
             });
         });
@@ -63,12 +67,12 @@ export class Smith_Waterman extends Component {
         let sq1 = seq1.split('');
         let sq2 = seq2.split('');
         let target = document.getElementById('resultDisplayArea');
-        while (target.hasChildNodes()) {
-            target.removeChild(target.lastChild);
-        }
+        // while (target.hasChildNodes()) {
+        //     target.removeChild(target.lastChild);
+        // }
         let line1;
         let line2; 
-        for (let i = 0; i < alignment.walk.length; i++) {
+        for (let i = 0; i < alignment.str1.length; i++) {
             if (i % 100 === 0){
                 line1 = document.createElement('div');
                 line2 = document.createElement('div');
@@ -101,11 +105,11 @@ export class Smith_Waterman extends Component {
         return (
             <div className="smith-waterman">
                 <br/><br/>
-                <button className='bttn' onClick={ this.smith_waterm }>Run Smith-Waterman Algorithm</button>
+                <button className='bttn' onClick={ this.handleMultipleSequences }>Run Smith-Waterman Algorithm</button>
                 <br/><br/><br/>
                 <button className='bttn' id="createIndexButton" onClick={ this.takeSequences }>Save Uploaded Sequence/s to SW Search State</button>
                 <br/><br/><br/>
-                <textarea placeholder="Enter Query Sequence" type="text" id='' name="seq2" onChange={ this.handleChange } value={ this.state.seq2 } style={{ height: '200px', width: '600px'}}></textarea>
+                <textarea placeholder="Enter Query Sequence" type="text" id='' name="querySeq" onChange={ this.handleChange } value={ this.state.querySeq } style={{ height: '200px', width: '600px'}}></textarea>
                 <br/><br/><br/>
                 <div id="resultDisplayArea"/>
 

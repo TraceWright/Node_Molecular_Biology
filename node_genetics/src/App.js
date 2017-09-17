@@ -24,7 +24,6 @@ window.onload = function() {
   let fileInput = document.getElementById('fileInput');
   let fileDisplayArea = document.getElementById('fileDisplayArea');
   let dirContents  = document.getElementById('dir-content');
-  let fileList;
 
   fs.readdir('/home', function(e, f) {
     let fileList = f.toString().split(',').join('\r\n');
