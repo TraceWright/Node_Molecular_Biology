@@ -45,7 +45,7 @@ window.onload = function() {
 }
 
 function clearBrowserFiles() {
-  let dirContents  = document.getElementById('dir-contents');
+  let dirContents  = document.getElementById('dir-content');
   dirContents.innerText = 'Directory Contents: ';
     fs.readdir('/home', function(e,f) {
       console.log(f);
