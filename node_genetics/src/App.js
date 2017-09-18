@@ -8,14 +8,12 @@ import { Smith_Waterman } from './components/smith_waterman';
 
 function uploadFile(fileName, fileText) {
   let dirContents  = document.getElementById('dir-content');
-  fs.mkdir('/home', function() {
-    fs.writeFile(`/home/${fileName}`, fileText, function () {
-      fs.readFile(`/home/${fileName}`, 'utf-8', function(err, data) {
-        fs.readdir('/home', function(e, f) {
-          let fileList = f.toString().split(',').join('\r\n');
-          dirContents.innerText = fileList;
-        }); 
-      });
+  fs.writeFile(`/home/${fileName}`, fileText, function () {
+    fs.readFile(`/home/${fileName}`, 'utf-8', function(err, data) {
+      fs.readdir('/home', function(e, f) {
+        let fileList = f.toString().split(',').join('\r\n');
+        dirContents.innerText = fileList;
+      }); 
     });
   });
 }
@@ -25,11 +23,12 @@ window.onload = function() {
   let fileDisplayArea = document.getElementById('fileDisplayArea');
   let dirContents  = document.getElementById('dir-content');
 
-  // fs.readdir('/home', function(e, f) {
-  //   let fileList = f.toString().split(',').join('\r\n');
-  //   dirContents.innerText = fileList;
-  // });
-
+  fs.mkdir('/home', function() {
+    fs.readdir('/home', function(e, f) {
+      let fileList = f.toString().split(',').join('\r\n');
+      dirContents.innerText = fileList;
+    });
+  });
 
   fileInput.addEventListener('change', function(e) {
       var file = fileInput.files[0];
