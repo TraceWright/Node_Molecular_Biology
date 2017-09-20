@@ -56,7 +56,6 @@ export class simple_starter extends Component {
         fs.readdir('/index', function(e,f) {
             f.forEach(function(element) {
                 fs.readFile(`/index/${element}`, 'utf-8', function(err, data) {
-                    console.log(element);
                     newState.push(JSON.parse(data));
                 });
             });
@@ -132,37 +131,9 @@ export class simple_starter extends Component {
           }
         }
         return rotationArr;
-
-        // rotationArr[0] = seqArr;
-        // regexArray[1] = /.{1,3}/g;
-        // regexArray[2] = /.{2,2}/g;
-        // regexArray[3] = /.{1}/g;
-        // for (let i = 1; i < 4; i++) {
-        //   rotationArr[i] = [];
-        //   for (let j = 0; j < seqArr.length - 1; j++) {
-        //     sep = '';
-        //     sep = seqArr[j].match(regexArray[i]);
-        //     if (i < 3) {
-        //       if (j > 0) {
-        //         rotationArr[i][j] = prev + sep[0];
-        //         prev = sep[1];
-        //       }
-        //       else { 
-        //         rotationArr[i][j] = sep[0]; 
-        //         prev = sep[1];
-        //       }
-        //     } else {
-        //       j > 0 ? rotationArr[i][j] = prev + sep[0] : rotationArr[i][j] = sep[0]; // TODO: Add last element to 4th rotation for full coverage
-        //       prev = sep[1] + sep[2] + sep[3];
-        //     }      
-        //   }
-        // }
-        // this.setState({ rotArr: rotationArr });
       }
     
       tokeniseSequence(s) {
-        // let s = this.state.sequences[i_main];
-        console.log(s);
         let tok = s.replace('/,/g' , '')
         let tokArray = tok.match(/.{1,4}/g);
         return tokArray;
@@ -186,29 +157,22 @@ export class simple_starter extends Component {
         let queryLength = ra.length;
 
         let positionStart;
-        //let index = [{ k: ra[0][0], d: [[1,1,[1]]]  }]; // d: documentNumber, termFrequency, termPosition[]
-        //let index = [{ k: '', d: [[[]]]  }];
         let index = this.state.indexes;
         for (let j = 0; j < ra.length; j++) {
             for (let i = 0; i < ra[j].length; i++) {
-                positionStart = 0 + (i * queryLength); // 0 is hardcoded currently for docNumber
+                positionStart = 0 + (i * queryLength); // 0 is hardcoded currently for rotNumber
                 let exists = index.findIndex(matchesExistingKmer, ra[j][i]);
                 if (exists < 1) {
-                    index.push( { k: ra[j][i], d: [[i_main,1,[positionStart]]] }) //fix hard coded document numbers
+                    index.push( { k: ra[j][i], d: [[i_main,1,[positionStart]]] }) 
                 } else {
-                    i_main === index[exists].d[index[exists].d.length - 1][0] ? null : index[exists].d.push([[i_main]]); // PUSHED INDEX FORMAT IS INCORRECT <- START HERE
-                    console.log(index[exists].d[0])
-                    console.log(index[exists].d.length - 2);
-                    console.log(index[exists].d);
-                    
+                    i_main === index[exists].d[index[exists].d.length - 1][0] ? null : index[exists].d.push([i_main,0,[]]);                   
                     index[exists].d[index[exists].d.length - 1][1] += 1;
-                    index[exists].d[index[exists].d.length - 1][2].push(positionStart);  // proto is last in array, add to second last to collect data for current document
-
+                    index[exists].d[index[exists].d.length - 1][2].push(positionStart); 
                 }  
-            }
-            
-    }
-    this.setState({ indexes: index });
+            }      
+        }
+        
+        this.setState({ indexes: index });
 
         //     let jsonIndex = JSON.stringify(index)
         // fs.writeFile(`/index/index_1`, jsonIndex, function(err) {
@@ -222,7 +186,7 @@ export class simple_starter extends Component {
       }
 
       accessIndexes() {
-          console.log(this.state.indexes)
+          // console.log(this.state.indexes)
       }
 
       indexCreationMain() {
@@ -307,11 +271,11 @@ export class simple_starter extends Component {
               <br/><br/><br/>
               <button className='bttn' id="indexCreationMainBttn" onClick={ this.indexCreationMain }>Main</button>
               <br/><br/><br/>
-              <button className='bttn' id="createIndexButton" onClick={ this.createIndex }>Create Index</button>
+              {/* <button className='bttn' id="createIndexButton" onClick={ this.createIndex }>Create Index</button>
               <br/><br/><br/>
               <button className='bttn' id="getIndexButton" onClick={ this.getIndex }>Get Index</button>
               <br/><br/><br/>
-              <button className='bttn' id="accessIndexButton" onClick={ this.accessIndexes }>Access Index</button>
+              <button className='bttn' id="accessIndexButton" onClick={ this.accessIndexes }>Access Index</button> */}
               <br/><br/><br/>
               <div className="index-dir-contents">
                 <label>/index directory contents:</label>
