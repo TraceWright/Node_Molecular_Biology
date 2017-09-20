@@ -5,6 +5,8 @@ import * as fs from 'browserify-fs';
 
 import { simple_starter } from './components/simple_starter';
 import { Smith_Waterman } from './components/smith_waterman';
+import { Burrows_Wheeler } from './components/burrows_wheeler';
+
 
 function uploadFile(fileName, fileText) {
   let dirContents  = document.getElementById('dir-content');
@@ -114,6 +116,7 @@ class App extends Component {
             <div id="search-components">
               <Route path="/simple_starter" component={simple_starter}/>
               <Route path="/smith_waterman" component={Smith_Waterman}/>
+              <Route path="/burrows_wheeler" component={Burrows_Wheeler}/>
             </div>
           </div>
         </div>

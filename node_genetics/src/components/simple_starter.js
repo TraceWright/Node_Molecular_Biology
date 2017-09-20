@@ -1,8 +1,14 @@
 import React, { Component } from 'react';
 import '../App.css';
+import * as fs from 'browserify-fs';
 
 function clearTextarea() {
     document.getElementById('seqInput').value = "";  
+}
+
+function matchesExistingKmer(element, index, array){
+    console.log(this);
+  return element.k === this;
 }
 
 export class simple_starter extends Component {
@@ -11,9 +17,15 @@ export class simple_starter extends Component {
       
         this.state = {
           seq: [],
-          seqIndex: []
+          rotArr: [], 
+          sequences: [],
+          indexes: []
         }
     
+        this.accessIndexes = this.accessIndexes.bind(this);                
+        this.getIndex = this.getIndex.bind(this);        
+        this.createIndex = this.createIndex.bind(this);
+        this.takeSequences = this.takeSequences.bind(this);
         this.searchIndex = this.searchIndex.bind(this);
         this.tokeniseSequence = this.tokeniseSequence.bind(this);
         this.createRotations = this.createRotations.bind(this);
@@ -25,6 +37,31 @@ export class simple_starter extends Component {
         this.setState({
             [target.name]: target.value
           });
+      }
+
+      getIndex() {
+        let newState = [];
+        fs.readdir('/index', function(e,f) {
+            f.forEach(function(element) {
+                fs.readFile(`/index/${element}`, 'utf-8', function(err, data) {
+                    console.log(element);
+                    newState.push(JSON.parse(data));
+                });
+            });
+        });
+        this.setState({ indexes: newState });
+      }
+
+      takeSequences() {
+        let newState = [];
+        fs.readdir('/home', function(e,f) {
+            f.forEach(function(element) {
+                fs.readFile(`/home/${element}`, 'utf-8', function(err, data) {
+                    newState.push(data);
+                });
+            });
+        });
+        this.setState({ sequences: newState });
       }
     
       submitSequence() {
@@ -78,23 +115,64 @@ export class simple_starter extends Component {
             }      
           }
         }
-        this.setState({ seqIndex: rotationArr });
+        this.setState({ rotArr: rotationArr });
       }
     
       tokeniseSequence() {
-        let s = document.getElementById('fileDisplayArea').textContent;
+        let s = this.state.sequences[0];
         console.log(s);
         let seq = s.replace('/,/g' , '')
         let seqArray = seq.match(/.{1,4}/g);
         this.createRotations(seqArray);
       }
+
+      createIndex() {
+        let indDirContents  = document.getElementById('index-dir-content');
+        
+
+        fs.mkdir('/index', function() {
+            fs.readdir('/index', function(e, f) {
+              let fileList = f.toString().split(',').join('\r\n');
+              indDirContents.innerText = fileList;
+            });
+          });
+
+        let rotations = this.state.rotArr // link to createRotations
+        let queryLength = rotations.length;
+
+        let positionStart;
+        let index = [{ k: rotations[0][0], d: [[1,1,[1]]]  }]; // d: documentNumber, termFrequency, termPosition[]
+        for (let i = 1; i < rotations[0].length; i++) {
+            positionStart = 0 + (i * queryLength); // 0 is hardcoded currently for docNumber
+            let exists = index.findIndex(matchesExistingKmer, rotations[0][i]);
+            if (exists < 1) {
+                index.push( { k: rotations[0][i], d: [[1,1,[positionStart]]] })
+            } else {
+                // add document number
+                index[exists].d[0][1] += 1;
+                index[exists].d[0][2].push(positionStart);  //fix positioning
+            }  
+        }
+            console.log(JSON.stringify(index))
+        fs.writeFile(`/index/index_1`, JSON.stringify(index), function(err) {
+            if (err) {
+                console.log('Error: ' + err)
+            } else {
+                console.log(`index_1 saved`)
+            }
+        } )         
+      }
+
+      accessIndexes() {
+          console.log(this.state.indexes)
+      }
       
       searchIndex() {
         let matchArray = [];
     
-        for (let i = 0; i < this.state.seqIndex.length; i++) {
-          for (let j = 0; j < this.state.seqIndex[i].length; j++) {
-            this.state.seqIndex[i][j] === this.state.seq ? matchArray.push({ rotation: i, position: j }) : null ;
+        for (let i = 0; i < this.state.rotArr.length; i++) {
+          for (let j = 0; j < this.state.rotArr[i].length; j++) {
+            this.state.rotArr[i][j] === this.state.seq ? matchArray.push({ rotation: i, position: j }) : null ;
           }
         }
         let saStartPos = this.calcRelativePosition(matchArray);
@@ -158,8 +236,20 @@ export class simple_starter extends Component {
               <h3>Search Sequence</h3><br/><br/>
               <div className="searchQueryInput" id="searchQueryInput">
               <br/><br/><br/>
-              <button id="createIndexButton" onClick={ this.tokeniseSequence }>Create Index</button>
+              <button className='bttn' id="saveFiles" onClick={ this.takeSequences }>Save Uploaded Sequence/s to SS Search State</button>
               <br/><br/><br/>
+              <button className='bttn' id="tokeniseSequence" onClick={ this.tokeniseSequence }>Tokenise Sequence</button>
+              <br/><br/><br/>
+              <button className='bttn' id="createIndexButton" onClick={ this.createIndex }>Create Index</button>
+              <br/><br/><br/>
+              <button className='bttn' id="getIndexButton" onClick={ this.getIndex }>Get Index</button>
+              <br/><br/><br/>
+              <button className='bttn' id="accessIndexButton" onClick={ this.accessIndexes }>Access Index</button>
+              <br/><br/><br/>
+              <div className="index-dir-contents">
+                <label>/index directory contents:</label>
+                <div style={{paddingLeft: '50px', paddingTop: '10px'}} id="index-dir-content"></div>
+              </div>
               <label>Result Sequence:</label>
               <br/><br/>
               <label id="resultDisplayArea" style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></label>
