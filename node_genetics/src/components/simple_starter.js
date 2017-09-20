@@ -7,7 +7,7 @@ function clearTextarea() {
 }
 
 function matchesExistingKmer(element, index, array){
-    if (element.k == this) {
+    if (element.k === this) {
         return index;
     }
 }
@@ -61,7 +61,7 @@ export class simple_starter extends Component {
                 });
             });
         });
-        this.setState({ indexes: newState });
+        // this.setState({ indexes: newState });
       }
 
       takeSequences() {
@@ -180,7 +180,7 @@ export class simple_starter extends Component {
           });
       }
 
-      createIndex(ra) {
+      createIndex(ra, i_main) {
           // initialise index directory in browser file system
         this.createIndexBrowserLocation();
         let queryLength = ra.length;
@@ -188,23 +188,27 @@ export class simple_starter extends Component {
         let positionStart;
         //let index = [{ k: ra[0][0], d: [[1,1,[1]]]  }]; // d: documentNumber, termFrequency, termPosition[]
         //let index = [{ k: '', d: [[[]]]  }];
-        let index = [];
+        let index = this.state.indexes;
         for (let j = 0; j < ra.length; j++) {
             for (let i = 0; i < ra[j].length; i++) {
-                console.log(ra[j].length);
                 positionStart = 0 + (i * queryLength); // 0 is hardcoded currently for docNumber
                 let exists = index.findIndex(matchesExistingKmer, ra[j][i]);
                 if (exists < 1) {
-                    index.push( { k: ra[j][i], d: [[0,1,[positionStart]]] }) //fix hard coded document numbers
+                    index.push( { k: ra[j][i], d: [[i_main,1,[positionStart]]] }) //fix hard coded document numbers
                 } else {
-                    // add document number
-                    index[exists].d[0][1] += 1;
-                    index[exists].d[0][2].push(positionStart);  //fix hard coded document numbers
-                }  
-                console.log(index);
-            }
-    }
+                    i_main === index[exists].d[index[exists].d.length - 1][0] ? null : index[exists].d.push([[i_main]]); // PUSHED INDEX FORMAT IS INCORRECT <- START HERE
+                    console.log(index[exists].d[0])
+                    console.log(index[exists].d.length - 2);
+                    console.log(index[exists].d);
+                    
+                    index[exists].d[index[exists].d.length - 1][1] += 1;
+                    index[exists].d[index[exists].d.length - 1][2].push(positionStart);  // proto is last in array, add to second last to collect data for current document
 
+                }  
+            }
+            
+    }
+    this.setState({ indexes: index });
 
         //     let jsonIndex = JSON.stringify(index)
         // fs.writeFile(`/index/index_1`, jsonIndex, function(err) {
@@ -226,7 +230,7 @@ export class simple_starter extends Component {
           for (let i = 0; i < sa.length; i++) {
             let ta = this.tokeniseSequence(sa[i]);
             let ra = this.createRotations(ta);
-            this.createIndex(ra);
+            this.createIndex(ra, i);
           }
       } 
       
