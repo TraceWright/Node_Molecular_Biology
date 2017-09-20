@@ -7,9 +7,19 @@ function clearTextarea() {
 }
 
 function matchesExistingKmer(element, index, array){
-    console.log(this);
-  return element.k === this;
+    if (element.k == this) {
+        return index;
+    }
 }
+
+function download(text, name, type) {
+    var a = document.createElement("a");
+    var file = new Blob([text], {type: type});
+    a.href = URL.createObjectURL(file);
+    a.download = name;
+    a.click();
+}
+
 
 export class simple_starter extends Component {
     constructor(props) {
@@ -19,9 +29,11 @@ export class simple_starter extends Component {
           seq: [],
           rotArr: [], 
           sequences: [],
-          indexes: []
+          indexes: [],
+          srcFileNames: []
         }
     
+        this.indexCreationMain = this.indexCreationMain.bind(this);
         this.accessIndexes = this.accessIndexes.bind(this);                
         this.getIndex = this.getIndex.bind(this);        
         this.createIndex = this.createIndex.bind(this);
@@ -54,13 +66,16 @@ export class simple_starter extends Component {
 
       takeSequences() {
         let newState = [];
+        let fileNames = [];
         fs.readdir('/home', function(e,f) {
             f.forEach(function(element) {
                 fs.readFile(`/home/${element}`, 'utf-8', function(err, data) {
+                    fileNames.push(element);
                     newState.push(data);
                 });
             });
         });
+        this.setState({ srcFileNames: fileNames });
         this.setState({ sequences: newState });
       }
     
@@ -91,6 +106,7 @@ export class simple_starter extends Component {
         let prev;
         let rotationArr = [];
         let regexArray = [];
+
         rotationArr[0] = seqArr;
         regexArray[1] = /.{1,3}/g;
         regexArray[2] = /.{2,2}/g;
@@ -115,18 +131,44 @@ export class simple_starter extends Component {
             }      
           }
         }
-        this.setState({ rotArr: rotationArr });
+        return rotationArr;
+
+        // rotationArr[0] = seqArr;
+        // regexArray[1] = /.{1,3}/g;
+        // regexArray[2] = /.{2,2}/g;
+        // regexArray[3] = /.{1}/g;
+        // for (let i = 1; i < 4; i++) {
+        //   rotationArr[i] = [];
+        //   for (let j = 0; j < seqArr.length - 1; j++) {
+        //     sep = '';
+        //     sep = seqArr[j].match(regexArray[i]);
+        //     if (i < 3) {
+        //       if (j > 0) {
+        //         rotationArr[i][j] = prev + sep[0];
+        //         prev = sep[1];
+        //       }
+        //       else { 
+        //         rotationArr[i][j] = sep[0]; 
+        //         prev = sep[1];
+        //       }
+        //     } else {
+        //       j > 0 ? rotationArr[i][j] = prev + sep[0] : rotationArr[i][j] = sep[0]; // TODO: Add last element to 4th rotation for full coverage
+        //       prev = sep[1] + sep[2] + sep[3];
+        //     }      
+        //   }
+        // }
+        // this.setState({ rotArr: rotationArr });
       }
     
-      tokeniseSequence() {
-        let s = this.state.sequences[0];
+      tokeniseSequence(s) {
+        // let s = this.state.sequences[i_main];
         console.log(s);
-        let seq = s.replace('/,/g' , '')
-        let seqArray = seq.match(/.{1,4}/g);
-        this.createRotations(seqArray);
+        let tok = s.replace('/,/g' , '')
+        let tokArray = tok.match(/.{1,4}/g);
+        return tokArray;
       }
 
-      createIndex() {
+      createIndexBrowserLocation() {
         let indDirContents  = document.getElementById('index-dir-content');
         
 
@@ -136,36 +178,57 @@ export class simple_starter extends Component {
               indDirContents.innerText = fileList;
             });
           });
+      }
 
-        let rotations = this.state.rotArr // link to createRotations
-        let queryLength = rotations.length;
+      createIndex(ra) {
+          // initialise index directory in browser file system
+        this.createIndexBrowserLocation();
+        let queryLength = ra.length;
 
         let positionStart;
-        let index = [{ k: rotations[0][0], d: [[1,1,[1]]]  }]; // d: documentNumber, termFrequency, termPosition[]
-        for (let i = 1; i < rotations[0].length; i++) {
-            positionStart = 0 + (i * queryLength); // 0 is hardcoded currently for docNumber
-            let exists = index.findIndex(matchesExistingKmer, rotations[0][i]);
-            if (exists < 1) {
-                index.push( { k: rotations[0][i], d: [[1,1,[positionStart]]] })
-            } else {
-                // add document number
-                index[exists].d[0][1] += 1;
-                index[exists].d[0][2].push(positionStart);  //fix positioning
-            }  
-        }
-            console.log(JSON.stringify(index))
-        fs.writeFile(`/index/index_1`, JSON.stringify(index), function(err) {
-            if (err) {
-                console.log('Error: ' + err)
-            } else {
-                console.log(`index_1 saved`)
+        //let index = [{ k: ra[0][0], d: [[1,1,[1]]]  }]; // d: documentNumber, termFrequency, termPosition[]
+        //let index = [{ k: '', d: [[[]]]  }];
+        let index = [];
+        for (let j = 0; j < ra.length; j++) {
+            for (let i = 0; i < ra[j].length; i++) {
+                console.log(ra[j].length);
+                positionStart = 0 + (i * queryLength); // 0 is hardcoded currently for docNumber
+                let exists = index.findIndex(matchesExistingKmer, ra[j][i]);
+                if (exists < 1) {
+                    index.push( { k: ra[j][i], d: [[0,1,[positionStart]]] }) //fix hard coded document numbers
+                } else {
+                    // add document number
+                    index[exists].d[0][1] += 1;
+                    index[exists].d[0][2].push(positionStart);  //fix hard coded document numbers
+                }  
+                console.log(index);
             }
-        } )         
+    }
+
+
+        //     let jsonIndex = JSON.stringify(index)
+        // fs.writeFile(`/index/index_1`, jsonIndex, function(err) {
+        //     if (err) {
+        //         console.log('Error: ' + err)
+        //     } else {
+        //         console.log(`index_1 saved`)
+        //         // download(jsonIndex, 'test.txt', 'text/plain');
+        //     }
+        // } ) 
       }
 
       accessIndexes() {
           console.log(this.state.indexes)
       }
+
+      indexCreationMain() {
+        let sa = this.state.sequences;
+          for (let i = 0; i < sa.length; i++) {
+            let ta = this.tokeniseSequence(sa[i]);
+            let ra = this.createRotations(ta);
+            this.createIndex(ra);
+          }
+      } 
       
       searchIndex() {
         let matchArray = [];
@@ -238,7 +301,7 @@ export class simple_starter extends Component {
               <br/><br/><br/>
               <button className='bttn' id="saveFiles" onClick={ this.takeSequences }>Save Uploaded Sequence/s to SS Search State</button>
               <br/><br/><br/>
-              <button className='bttn' id="tokeniseSequence" onClick={ this.tokeniseSequence }>Tokenise Sequence</button>
+              <button className='bttn' id="indexCreationMainBttn" onClick={ this.indexCreationMain }>Main</button>
               <br/><br/><br/>
               <button className='bttn' id="createIndexButton" onClick={ this.createIndex }>Create Index</button>
               <br/><br/><br/>

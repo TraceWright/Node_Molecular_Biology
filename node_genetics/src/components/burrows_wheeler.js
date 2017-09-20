@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import '../App.css';
-import { bwt } from 'burrows-wheeler-transform'; // ibwt
+// import { bwt } from 'burrows-wheeler-transform'; // ibwt
 import * as fs from 'browserify-fs';
 
 export class Burrows_Wheeler extends Component {
@@ -30,8 +30,8 @@ export class Burrows_Wheeler extends Component {
 
         burrowsWheeler() {
             console.log(this.state.sequences)
-            const WORD = this.state.sequences[0]
-            const transformedWord = bwt(WORD)
+            // const WORD = this.state.sequences[0]
+            // const transformedWord = bwt(WORD)
             }
 
         render() {
