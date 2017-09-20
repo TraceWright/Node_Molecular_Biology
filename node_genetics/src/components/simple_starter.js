@@ -171,7 +171,7 @@ export class simple_starter extends Component {
                 }  
             }      
         }
-        
+
         this.setState({ indexes: index });
 
         //     let jsonIndex = JSON.stringify(index)
@@ -187,6 +187,16 @@ export class simple_starter extends Component {
 
       accessIndexes() {
           // console.log(this.state.indexes)
+
+        let jsonIndex = JSON.stringify(this.state.indexes)
+        fs.writeFile(`/index/index_1`, jsonIndex, function(err) {
+            if (err) {
+                console.log('Error: ' + err)
+            } else {
+                console.log(`index_1 saved`)
+                download(jsonIndex, 'test.txt', 'text/plain');
+            }
+        } ) 
       }
 
       indexCreationMain() {
@@ -273,9 +283,9 @@ export class simple_starter extends Component {
               <br/><br/><br/>
               {/* <button className='bttn' id="createIndexButton" onClick={ this.createIndex }>Create Index</button>
               <br/><br/><br/>
-              <button className='bttn' id="getIndexButton" onClick={ this.getIndex }>Get Index</button>
+              <button className='bttn' id="getIndexButton" onClick={ this.getIndex }>Get Index</button> */}
               <br/><br/><br/>
-              <button className='bttn' id="accessIndexButton" onClick={ this.accessIndexes }>Access Index</button> */}
+              <button className='bttn' id="accessIndexButton" onClick={ this.accessIndexes }>Access Index</button>
               <br/><br/><br/>
               <div className="index-dir-contents">
                 <label>/index directory contents:</label>
