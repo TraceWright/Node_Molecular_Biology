@@ -6,7 +6,7 @@ function clearTextarea() {
     document.getElementById('seqInput').value = "";  
 }
 
-function matchesExistingKmer(element, index, array){
+function matchesKmer(element, index, array){
     if (element.k === this) {
         return index;
     }
@@ -101,41 +101,26 @@ export class simple_starter extends Component {
       }
     
       createRotations(seqArr) {
-        let sep;
-        let prev;
+        let prev = '';
         let rotationArr = [];
-        let regexArray = [];
+        let ql = seqArr[0].length;
 
         rotationArr[0] = seqArr;
-        regexArray[1] = /.{1,3}/g;
-        regexArray[2] = /.{2,2}/g;
-        regexArray[3] = /.{1}/g;
-        for (let i = 1; i < 4; i++) {
-          rotationArr[i] = [];
-          for (let j = 0; j < seqArr.length - 1; j++) {
-            sep = '';
-            sep = seqArr[j].match(regexArray[i]);
-            if (i < 3) {
-              if (j > 0) {
-                rotationArr[i][j] = prev + sep[0];
-                prev = sep[1];
-              }
-              else { 
-                rotationArr[i][j] = sep[0]; 
-                prev = sep[1];
-              }
-            } else {
-              j > 0 ? rotationArr[i][j] = prev + sep[0] : rotationArr[i][j] = sep[0]; // TODO: Add last element to 4th rotation for full coverage
-              prev = sep[1] + sep[2] + sep[3];
-            }      
-          }
-        }
+        for (let i = 1; i < ql; i++) {
+            rotationArr[i] = [];
+            prev = '';
+            for (let j = 0; j < seqArr.length - 1; j++) {
+                let current = seqArr[j].slice(0, ql-i);
+                rotationArr[i][j] = `${prev}${current}`
+                prev = seqArr[j].slice(ql-i, ql);
+              }      
+            }
         return rotationArr;
       }
     
       tokeniseSequence(s) {
         let tok = s.replace('/,/g' , '')
-        let tokArray = tok.match(/.{1,4}/g);
+        let tokArray = tok.match(/.{1,7}/g);
         return tokArray;
       }
 
@@ -161,7 +146,7 @@ export class simple_starter extends Component {
         for (let j = 0; j < ra.length; j++) {
             for (let i = 0; i < ra[j].length; i++) {
                 positionStart = 0 + (i * queryLength); // 0 is hardcoded currently for rotNumber
-                let exists = index.findIndex(matchesExistingKmer, ra[j][i]);
+                let exists = index.findIndex(matchesKmer, ra[j][i]);
                 if (exists < 1) {
                     index.push( { k: ra[j][i], d: [[i_main,1,[positionStart]]] }) 
                 } else {
@@ -173,16 +158,6 @@ export class simple_starter extends Component {
         }
 
         this.setState({ indexes: index });
-
-        //     let jsonIndex = JSON.stringify(index)
-        // fs.writeFile(`/index/index_1`, jsonIndex, function(err) {
-        //     if (err) {
-        //         console.log('Error: ' + err)
-        //     } else {
-        //         console.log(`index_1 saved`)
-        //         // download(jsonIndex, 'test.txt', 'text/plain');
-        //     }
-        // } ) 
       }
 
       accessIndexes() {
@@ -207,19 +182,37 @@ export class simple_starter extends Component {
             this.createIndex(ra, i);
           }
       } 
-      
+
+      calculateIDF(n, nk) {
+        
+      }
+
       searchIndex() {
-        let matchArray = [];
-    
-        for (let i = 0; i < this.state.rotArr.length; i++) {
-          for (let j = 0; j < this.state.rotArr[i].length; j++) {
-            this.state.rotArr[i][j] === this.state.seq ? matchArray.push({ rotation: i, position: j }) : null ;
-          }
+        let q = this.state.seq;
+        let s = this.state.indexes;
+        let match = s.findIndex(matchesKmer, q);
+        if (match < 1) {
+            // no match
+        } else {
+            let n = s[match].d.length;
+            let nk = this.state.sequences.length;
+            this.calculateIDF(n, nk);
         }
-        let saStartPos = this.calcRelativePosition(matchArray);
-        let saPos = this.extendMatchArr(saStartPos);
-        this.highlightMatches(saPos);
-      }     
+        
+      }
+      
+    //   searchIndex() {
+    //     let matchArray = [];
+    
+    //     for (let i = 0; i < this.state.rotArr.length; i++) {
+    //       for (let j = 0; j < this.state.rotArr[i].length; j++) {
+    //         this.state.rotArr[i][j] === this.state.seq ? matchArray.push({ rotation: i, position: j }) : null ;
+    //       }
+    //     }
+    //     let saStartPos = this.calcRelativePosition(matchArray);
+    //     let saPos = this.extendMatchArr(saStartPos);
+    //     this.highlightMatches(saPos);
+    //   }     
     
       calcRelativePosition(matches) {
         let saStartPos = [];
