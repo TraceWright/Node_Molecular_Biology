@@ -183,8 +183,12 @@ export class simple_starter extends Component {
           }
       } 
 
-      calculateIDF(n, nk) {
-        
+      calculateIDF(n, corpusLen) {
+        return Math.log10(corpusLen / n);
+      }
+
+      calculateTFIDF(tf, idf) {
+          return tf * idf;
       }
 
       searchIndex() {
@@ -195,8 +199,10 @@ export class simple_starter extends Component {
             // no match
         } else {
             let n = s[match].d.length;
-            let nk = this.state.sequences.length;
-            this.calculateIDF(n, nk);
+            let corpusLen = this.state.sequences.length;
+            let idf = this.calculateIDF(n, corpusLen);
+            let tf = s[match].d[0][1] // hardcoded 0 does first document only
+            let tfidf = this.calculateTFIDF(tf, idf);
         }
         
       }
