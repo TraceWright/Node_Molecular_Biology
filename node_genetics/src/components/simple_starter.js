@@ -284,7 +284,7 @@ export class simple_starter extends Component {
                 <label>/index directory contents:</label>
                 <div style={{paddingLeft: '50px', paddingTop: '10px'}} id="index-dir-content"></div>
               </div>
-              <label>Result Sequence:</label>
+              {/* <label>Result Sequence:</label> */}
               <br/><br/>
               <label id="resultDisplayArea" style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></label>
               </div>
