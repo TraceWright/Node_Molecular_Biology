@@ -1,0 +1,5 @@
+cd /media/sf_website
+
+sed ':a;N;$!ba;s/\n//g' inputfile > outputfile
+
+halt -p

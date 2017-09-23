@@ -1,0 +1,3 @@
+/organism="Staphylococcus aureus subsp. aureus RN4220"
+/function="Initiation of chromosome replication"
+/product="DnaA"

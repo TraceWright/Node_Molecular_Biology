@@ -1,0 +1,3 @@
+/organism="Escherichia coli FVEC1412"
+/function="Chromosomal replication initiator;
+/product="DnaA"

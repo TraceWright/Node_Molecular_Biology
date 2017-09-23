@@ -1,0 +1,391 @@
+     source          1..121222
+                     /organism="Staphylococcus aureus subsp. aureus RN4220"
+
+     gene            complement(387..947)
+                     /product="biofilm operon icaADBC HTH-type negative
+                     transcriptional regulator IcaR"
+                     
+     gene            1111..2349
+                     /product="poly-beta-1,6 N-acetyl-D-glucosamine synthase"
+
+     gene            2313..2618
+                     /product="poly-beta-1,6-N-acetyl-D-glucosamine synthesis
+                     protein IcaD"
+
+     gene            2615..3487
+                     /product="poly-beta-1,6-N-acetyl-D-glucosamine
+                     N-deacetylase"
+                    
+     gene            3474..4526
+                     /product="poly-beta-1,6-N-acetyl-D-glucosamine export
+                     protein"
+                     
+     gene            4669..4725
+                     /product="hypothetical protein"
+                    
+     gene            4803..4928
+                     /product="hypothetical protein"
+                     
+     gene            complement(4973..7015)
+                     /product="Lipase 1"
+                     
+     gene            complement(7736..7915)
+                     /product="hypothetical protein"
+                     
+     gene            complement(8108..8740)
+                     /product="bifunctional phosphoribosyl-AMP
+                     cyclohydrolase/phosphoribosyl-ATP diphosphatase HisIE"
+                     
+     gene            complement(8737..9495)
+                     /product="imidazole glycerol phosphate synthase cyclase
+                     subunit"
+                
+     gene            complement(9492..10196)
+                     /product="1-(5-phosphoribosyl)-5-((5-
+                     phosphoribosylamino)methylideneamino)imidazole-4-
+                     carboxamide isomerase"
+                     
+     gene            complement(10189..10767)
+                     /product="imidazole glycerol phosphate synthase subunit
+                     HisH"
+
+     gene            complement(10764..11342)
+                     /product="imidazoleglycerol-phosphate dehydratase"
+                     /protein_id="WP_000640266.1"
+                     
+     gene            complement(11311..12324)
+                     /product="histidinol-phosphate aminotransferase"
+                     
+     gene            complement(12340..13590)
+                     /product="histidinol dehydrogenase"
+                     
+     gene            complement(13583..14197)
+                     /product="ATP phosphoribosyltransferase"
+                     
+     gene            complement(14215..15033)
+                     /product="ATP phosphoribosyltransferase regulatory
+                     subunit"
+                     
+     gene            complement(15338..16462)
+                     /product="polysaccharide deacetylase"
+                     /protein_id="WP_000549223.1"
+                     
+     gene            complement(16580..17077)
+                     /product="N-acetyltransferase"
+                     
+     gene            complement(17124..17957)
+                     /product="energy-coupling factor transporter transmembrane
+                     protein EcfT"
+                     
+     gene            complement(17954..19666)
+                     /product="ABC transporter ATP-binding protein"
+                     
+     gene            complement(19719..20273)
+                     /product="DUF3816 family protein"
+                     
+     gene            complement(20302..21150)
+                     /product="DNA-directed RNA polymerase subunit delta"
+                    
+     gene            21530..22045
+                     /product="polyisoprenoid-binding protein"
+
+     gene            complement(22194..23165)
+                     /product="lactonase"
+                    
+     gene            23409..24365
+                     /product="sulfurtransferase"
+                
+     gene            24517..25155
+                     /product="pyrrolidone-carboxylate peptidase"
+                     
+     gene            complement(25274..26041)
+                     /product="hypothetical protein"
+                    
+     gene            complement(26031..26369)
+                     /product="PadR family transcriptional regulator"
+                     
+     gene            26536..27000
+                     /product="DinB family protein"
+                     
+     gene            27238..28656
+                     /product="anion permease"
+                     
+     gene            complement(29069..29977)
+                     /product="protein RarD"
+                     
+     gene            30202..30777
+                     /product="DNA-binding protein"
+                    
+     gene            30942..31958
+                     /product="HoxN/HupN/NixA family nickel/cobalt transporter"
+                     
+     gene            32201..32995
+                     /product="arylamine N-acetyltransferase"
+                     
+     gene            complement(33129..33641)
+                     /product="membrane protein"
+                    
+     gene            33924..34682
+                     /product="ABC transporter ATP-binding protein"
+                     
+     gene            34672..36552
+                     /product="ABC transporter permease"
+                     
+     gene            36645..36836
+                     /product="membrane protein"
+                    
+     gene            <36884..37384
+                     /product="IS30 family transposase"
+
+     gene            complement(37444..37941)
+                     /product="hypothetical protein"
+                     
+     gene            <38035..38370
+                     /product="IS30 family transposase"
+
+     gene            38399..38590
+                     /product="membrane protein"
+                    
+     gene            38983..39183
+                     /product="cold-shock protein"
+                     
+     gene            complement(39310..39879)
+                     /product="transcriptional regulator"
+                     
+     gene            complement(40139..40534)
+                     /product="DUF3147 domain-containing protein"
+                     
+     gene            complement(40602..40955)
+                     /product="DUF3147 domain-containing protein"
+                     
+     gene            41143..41292
+                     /product="hypothetical protein"
+                     
+     gene            complement(41409..42248)
+                     /product="nucleoid occlusion protein"
+                     
+     gene            complement(42291..43010)
+                     /product="ribosomal RNA small subunit methyltransferase G"
+                     
+     gene            complement(43010..44887)
+                     /product="tRNA uridine-5-carboxymethylaminomethyl(34)
+                     synthesis enzyme MnmG"
+
+     gene            complement(44954..46333)
+                     /product="tRNA uridine-5-carboxymethylaminomethyl(34)
+                     synthesis GTPase MnmE"
+
+     gene            complement(46472..46825)
+                     /product="ribonuclease P protein component"
+                     
+     gene            complement(46946..47083)
+                     /product="50S ribosomal protein L34"
+                    
+     gene            47814..49175
+                     /product="chromosomal replication initiator protein DnaA"
+                     
+     gene            49453..50586
+                     /product="DNA polymerase III subunit beta"
+                     
+     gene            50967..51212
+                     /product="RNA-binding protein"
+                     
+     gene            51209..52321
+                     /product="DNA replication and repair protein RecF"
+                     
+     gene            52331..54265
+                     /product="DNA gyrase subunit B"
+                     
+     gene            54302..56965
+                     /product="DNA gyrase subunit A"
+                     
+     gene            complement(57052..57864)
+                     /product="NAD(P)H-hydrate dehydratase"
+                     
+     gene            58190..59704
+                     /product="histidine ammonia-lyase"
+
+     gene            complement(59905..60093)
+                     /product="hypothetical protein"
+                     
+     gene            60083..61369
+                     /product="serine--tRNA ligase"
+                     
+     gene            62019..62714
+                     /product="branched-chain amino acid ABC transporter
+                     permease"
+                     
+     gene            62711..63040
+                     /product="membrane protein"
+                     
+     regulatory      63245..63343
+                     /note="SAM riboswitch class I; Derived by automated
+                     computational analysis using gene prediction method:
+                     cmsearch."
+                     
+     gene            63403..64371
+                     /product="homoserine O-acetyltransferase"
+                     
+     gene            64662..65600
+                     /product="DUF2232 domain-containing protein"
+                     
+     gene            65615..67582
+                     /product="DHH family phosphoesterase"
+
+     gene            67579..68031
+                     /product="50S ribosomal protein L9"
+                     
+     gene            68063..69463
+                     /product="replicative DNA helicase"
+
+     gene            complement(69513..69740)
+                     /product="hypothetical protein"
+
+     gene            69741..71024
+                     /product="adenylosuccinate synthetase"
+                     
+     gene            71454..71528
+                     /product="tRNA-Glu"
+                     
+     gene            71536..71608
+                     /product="tRNA-Asp"
+
+     gene            72228..72929
+                     /product="DNA-binding response regulator"
+                     
+     gene            72942..74768
+                     /product="cell wall metabolism sensor histidine kinase
+                     WalK"
+
+     gene            74761..76095
+                     /product="hypothetical protein"
+                     
+     gene            76096..76884
+                     /product="hypothetical protein"
+                     
+     gene            77274..78074
+                     /product="MBL fold metallo-hydrolase"
+
+     gene            78302..80620
+                     /product="multifunctional 2',3'-cyclic-nucleotide
+                     2'-phosphodiesterase/5'-nucleotidase/3'-nucleotidase"
+                     
+     gene            80988..81467
+                     /product="23S rRNA
+                     (pseudouridine(1915)-N(3))-methyltransferase RlmH"
+
+     gene            complement(81672..81806)
+                     /product="hypothetical protein"
+
+     gene            81770..81862
+                     /product="hypothetical protein"
+
+     gene            82009..83754
+                     /product="hypothetical protein"
+                     
+     gene            complement(83848..84300)
+                     /product="dihydrouridine synthase"
+                     
+     gene            complement(84316..84417)
+                     /product="hypothetical protein"
+                     
+     gene            complement(84515..85270)
+                     /product="sulfite exporter TauE/SafE family protein"
+                    
+     gene            complement(85270..85530)
+                     /product="hypothetical protein"
+                    
+     gene            85667..86734
+                     /product="dihydroneopterin aldolase"
+
+     gene            86765..88099
+                     /product="MBL fold metallo-hydrolase"
+
+     gene            88118..89311
+                     /product="NAD(P)/FAD-dependent oxidoreductase"
+
+     gene            complement(89578..89679)
+                     /product="universal stress protein"
+                     
+     gene            complement(89676..89877)
+                     /product="hypothetical protein"
+
+     gene            complement(89978..90910)
+                     /product="tRNA-dihydrouridine synthase"
+                     
+     gene            91273..91476
+                     /product="hypothetical protein"
+
+     gene            91525..91821
+                     /locus_tag="GG5_RS0113715"
+                     /product="transcriptional regulator"
+                     
+     gene            complement(91893..93113)
+                     /product="MFS transporter"
+                     
+     gene            complement(93106..93657)
+                     /product="flavodoxin family protein"
+                     
+     gene            93770..94630
+                     /product="LysR family transcriptional regulator"
+                     
+     gene            complement(94985..95518)
+                     /product="DUF4865 domain-containing protein"
+                     
+     gene            95609..96352
+                     /product="LysR family transcriptional regulator"
+                     
+     gene            96786..97388
+                     /product="hypothetical protein"
+                     
+     gene            97655..100807
+                     /product="ATPase"
+                    
+     gene            100864..101346
+                     /product="hypothetical protein"
+
+     gene            101551..102537
+                     /product="1-phosphatidylinositol phosphodiesterase"
+                     
+     gene            102758..103528
+                     /product="tandem-type lipoprotein"
+                     
+     gene            103580..104350
+                     /product="tandem-type lipoprotein"
+                     
+     gene            104414..105184
+                     /product="tandem-type lipoprotein"
+
+     gene            105251..106018
+                     /product="tandem-type lipoprotein"
+                     
+     gene            106151..108349
+                     /product="AraC family transcriptional regulator"
+                    
+     gene            108500..109678
+                     /product="amidohydrolase"
+                    
+     gene            109680..111068
+                     /product="MFS transporter"
+                     
+     gene            complement(111561..113222)
+                     /product="Na/Pi cotransporter"
+                     
+     gene            complement(113548..115323)
+                     /product="oleate hydratase"
+                    
+     gene            complement(115497..116369)
+                     /product="EamA/RhaT family transporter"
+                    
+     gene            116482..117879
+                     /product="PLP-dependent aminotransferase family protein"
+                     
+     gene            118069..118542
+                     /product="DUF1648 domain-containing protein"
+                     
+     gene            118804..120396
+                     /product="L-lactate permease"
+                    
+     gene            complement(120725..>121222)
+                     /product="YSIRK signal domain/LPXTG anchor domain surface
+                     protein"
