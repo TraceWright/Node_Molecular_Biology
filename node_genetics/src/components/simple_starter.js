@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import '../App.css';
 import * as fs from 'browserify-fs';
-var Client = require('node-rest-client').Client;
+let Stopwatch = require("node-stopwatch").Stopwatch;
+let Client = require('node-rest-client').Client;
 
-
-
+let stopwatch = Stopwatch.create();
 
 function clearTextarea() {
     document.getElementById('seqInput').value = "";  
@@ -17,8 +17,8 @@ function matchesKmer(element, index, array){
 }
 
 function download(text, name, type) {
-    var a = document.createElement("a");
-    var file = new Blob([text], {type: type});
+    let a = document.createElement("a");
+    let file = new Blob([text], {type: type});
     a.href = URL.createObjectURL(file);
     a.download = name;
     a.click();
@@ -161,7 +161,7 @@ export class simple_starter extends Component {
       }
 
       createIndex(ra, i_main) {
-          // initialise index directory in browser file system
+
         this.createIndexBrowserLocation();
         let queryLength = ra.length;
 
@@ -182,7 +182,7 @@ export class simple_starter extends Component {
         }
 
         this.setState({ indexes: index });
-        console.log('index created')
+        // console.log('index created')
       }
 
       accessIndexes() {
@@ -200,12 +200,15 @@ export class simple_starter extends Component {
       }
 
       indexCreationMain() {
+        stopwatch.start();
         let sa = this.state.sequences;
           for (let i = 0; i < sa.length; i++) {
             let ta = this.tokeniseSequence(sa[i]);
             let ra = this.createRotations(ta);
             this.createIndex(ra, i);
           }
+        stopwatch.stop();
+        console.log("minutes: " + stopwatch.elapsed.minutes + "seconds: " + stopwatch.elapsed.seconds)
       } 
 
       calculateIDF(n, corpusLen) {
@@ -245,41 +248,42 @@ export class simple_starter extends Component {
     //     this.highlightMatches(saPos);
     //   }     
     
-      calcRelativePosition(matches) {
-        let saStartPos = [];
-        for (let i = 0; i < matches.length; i++) {
-          saStartPos.push(4 - matches[i].rotation + (4 * matches[i].position) - 4);
-        }
-        return saStartPos;
-      }
+      // calcRelativePosition(matches) {
+      //   let saStartPos = [];
+      //   for (let i = 0; i < matches.length; i++) {
+      //     saStartPos.push(4 - matches[i].rotation + (4 * matches[i].position) - 4);
+      //   }
+      //   return saStartPos;
+      // }
     
-      highlightMatches(saPos) {
-        let seq = document.getElementById('fileDisplayArea').textContent;
-        let target = document.getElementById('resultDisplayArea');
-        for (let i = 0; i < seq.length; i++) {
-          var elem = document.createElement('span'),
-          text = document.createTextNode(seq[i]);
-      elem.appendChild(text);
+    //   highlightMatches(saPos) {
+    //     let seq = document.getElementById('fileDisplayArea').textContent;
+    //     let target = document.getElementById('resultDisplayArea');
+    //     for (let i = 0; i < seq.length; i++) {
+    //       var elem = document.createElement('span'),
+    //       text = document.createTextNode(seq[i]);
+    //   elem.appendChild(text);
     
-      if (saPos.indexOf(i) > -1) {
-          elem.style.color = 'red'
-          elem.style.fontWeight = 'bold'
-      } else {
-          elem.style.color = 'black'
-      }
-      target.appendChild(elem);
-      }
-    }
+    //   if (saPos.indexOf(i) > -1) {
+    //       elem.style.color = 'red'
+    //       elem.style.fontWeight = 'bold'
+    //   } else {
+    //       elem.style.color = 'black'
+    //   }
+    //   target.appendChild(elem);
+    //   }
+    // }
     
-    extendMatchArr(saStartPos) {
-      let positionsArray = [];
-      saStartPos.forEach(function(element) {
-        for (let i = 0; i < 4; i++) {  
-          positionsArray.push(element + i);
-        }
-      }, this);
-      return positionsArray;
-    }
+    // extendMatchArr(saStartPos) {
+    //   let positionsArray = [];
+    //   saStartPos.forEach(function(element) {
+    //     for (let i = 0; i < 4; i++) {  
+    //       positionsArray.push(element + i);
+    //     }
+    //   }, this);
+    //   return positionsArray;
+    // }
+
   render() {
     return (
         <div style={{display: 'inlineBlock'}}>
