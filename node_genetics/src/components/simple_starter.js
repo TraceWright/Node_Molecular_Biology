@@ -1,6 +1,10 @@
 import React, { Component } from 'react';
 import '../App.css';
 import * as fs from 'browserify-fs';
+var Client = require('node-rest-client').Client;
+
+
+
 
 function clearTextarea() {
     document.getElementById('seqInput').value = "";  
@@ -33,6 +37,7 @@ export class simple_starter extends Component {
           srcFileNames: []
         }
     
+        this.postData = this.postData.bind(this);
         this.indexCreationMain = this.indexCreationMain.bind(this);
         this.accessIndexes = this.accessIndexes.bind(this);                
         this.getIndex = this.getIndex.bind(this);        
@@ -43,6 +48,25 @@ export class simple_starter extends Component {
         this.createRotations = this.createRotations.bind(this);
         this.submitSequence = this.submitSequence.bind(this);
         this.handleChange = this.handleChange.bind(this); 
+      }
+
+      postData() {
+        console.log(this.state.indexes)
+        let jsonIndex = JSON.stringify(this.state.indexes)
+        var client = new Client();
+        var args = {
+          data: { test: jsonIndex },
+          headers: { "Content-Type": "application/json" },
+          body: this.state.index
+        };
+        
+      client.post("http://localhost:4000/index", args, function (data, response) {
+        // parsed response body as js object 
+        console.log("hello");
+        // raw response 
+        console.log(response);
+      });
+      
       }
     
       handleChange({ target }) {
@@ -158,6 +182,7 @@ export class simple_starter extends Component {
         }
 
         this.setState({ indexes: index });
+        console.log('index created')
       }
 
       accessIndexes() {
@@ -281,8 +306,8 @@ export class simple_starter extends Component {
               <button className='bttn' id="indexCreationMainBttn" onClick={ this.indexCreationMain }>Main</button>
               <br/><br/><br/>
               {/* <button className='bttn' id="createIndexButton" onClick={ this.createIndex }>Create Index</button>
-              <br/><br/><br/>
-              <button className='bttn' id="getIndexButton" onClick={ this.getIndex }>Get Index</button> */}
+              <br/><br/><br/> */}
+              <button className='bttn' id="getIndexButton" onClick={ this.postData }>Post Data</button>
               <br/><br/><br/>
               <button className='bttn' id="accessIndexButton" onClick={ this.accessIndexes }>Access Index</button>
               <br/><br/><br/>
