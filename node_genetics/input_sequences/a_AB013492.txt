@@ -1,3 +1,2 @@
 /organism="Bacillus halodurans"
-/function="Chromosomal replication initiator"
-/product="DnaA"
+/function="chromosomal replication initiator

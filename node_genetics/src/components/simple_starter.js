@@ -55,7 +55,7 @@ export class simple_starter extends Component {
         let jsonIndex = JSON.stringify(this.state.indexes)
         var client = new Client();
         var args = {
-          data: { test: jsonIndex },
+          data: { data: jsonIndex },
           headers: { "Content-Type": "application/json" },
           body: this.state.index
         };
@@ -65,8 +65,21 @@ export class simple_starter extends Component {
         console.log("hello");
         // raw response 
         console.log(response);
-      });
+      }); 
       
+      }
+
+      postSearchQuery(queryStr) {
+        var client = new Client();
+        var args = {
+          data: { data: queryStr },
+          headers: { "Content-Type": "application/json" },
+        };
+        console.log(queryStr);
+      client.post("http://localhost:4000/query", args, function (data, response) {
+        console.log(response);
+        console.log(JSON.parse(data.toString()));
+      });
       }
     
       handleChange({ target }) {
@@ -220,18 +233,24 @@ export class simple_starter extends Component {
       }
 
       searchIndex() {
-        let q = this.state.seq;
-        let s = this.state.indexes;
-        let match = s.findIndex(matchesKmer, q);
-        if (match < 1) {
-            // no match
-        } else {
-            let n = s[match].d.length;
-            let corpusLen = this.state.sequences.length;
-            let idf = this.calculateIDF(n, corpusLen);
-            let tf = s[match].d[0][1] // hardcoded 0 does first document only
-            let tfidf = this.calculateTFIDF(tf, idf);
-        }
+
+        
+        this.postSearchQuery(this.state.seq);
+
+
+
+        // let q = this.state.seq;
+        // let s = this.state.indexes;
+        // let match = s.findIndex(matchesKmer, q);
+        // if (match < 1) {
+        //     // no match
+        // } else {
+        //     let n = s[match].d.length;
+        //     let corpusLen = this.state.sequences.length;
+        //     let idf = this.calculateIDF(n, corpusLen);
+        //     let tf = s[match].d[0][1] // hardcoded 0 does first document only
+        //     let tfidf = this.calculateTFIDF(tf, idf);
+        // }
         
       }
       
