@@ -232,10 +232,20 @@ export class simple_starter extends Component {
           return tf * idf;
       }
 
+      validateQuery(tokensArray) {
+        // check that the query tokens length == 7
+      }
+
+      tokeniseQuery(querySeq) {
+        let tokensArray = querySeq.split(' ');
+        //this.validateQuery(tokensArray);
+        return tokensArray;
+      }
+
       searchIndex() {
 
-        
-        this.postSearchQuery(this.state.seq);
+        let tokensArray = this.tokeniseQuery(this.state.seq);
+        this.postSearchQuery(tokensArray);
 
 
 
@@ -330,7 +340,7 @@ export class simple_starter extends Component {
               <br/><br/><br/>
               {/* <button className='bttn' id="createIndexButton" onClick={ this.createIndex }>Create Index</button>
               <br/><br/><br/> */}
-              <button className='bttn' id="getIndexButton" onClick={ this.postData }>Post Data</button>
+              <button className='bttn' id="postDataButton" onClick={ this.postData }>Post Data</button>
               <br/><br/><br/>
               <button className='bttn' id="accessIndexButton" onClick={ this.accessIndexes }>Access Index</button>
               <br/><br/><br/>
