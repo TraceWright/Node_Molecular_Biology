@@ -1,0 +1,9 @@
+db.node_genetics.insert({})
+use node_genetics
+
+show collections
+
+db.gene_indexes.find()
+db.gene_indexes.find({k: "AAAATT"})
+db.gene_indexes.find().count()
+db.gene_indexes.remove({})
