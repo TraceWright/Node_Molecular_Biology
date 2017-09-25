@@ -77,12 +77,13 @@
   background: transparent;
   height: 30px;
   font-weight: bold;
-  color: #333333;
+  font-size: 15px;
+  color: #555555;
 }
 
 .loader {
   border: 6px solid #f3f3f3; /* Light grey */
-  border-top: 2px solid #3498db; /* Blue */
+  border-top: 2px solid #3497DB; /* Blue */
   border-radius: 50%;
   width: 20px;
   height: 20px;
