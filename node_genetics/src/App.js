@@ -7,6 +7,8 @@ import { simple_starter } from './components/simple_starter';
 import { Smith_Waterman } from './components/smith_waterman';
 import { Burrows_Wheeler } from './components/burrows_wheeler';
 
+// let Stopwatch = require("node-stopwatch").Stopwatch;
+// let stopwatch = Stopwatch.create();
 
 function uploadFile(fileName, fileText) {
   let dirContents  = document.getElementById('dir-content');
@@ -19,6 +21,26 @@ function uploadFile(fileName, fileText) {
     });
   });
 }
+
+// function  displayUploadTime(minutes, seconds) {
+//   let uploadTimer  = document.getElementById('upload-timer');
+//   minutes > 0 ? uploadTimer.innerText = `${minutes}:${Math.round(seconds)} minutes`: uploadTimer.innerText = `${seconds.toFixed(3)} seconds`; 
+// }
+
+// function checkIfLoaded() {
+//   let fileDisplayArea = document.getElementById('fileDisplayArea');
+// console.log(fileDisplayArea.innerText)
+//   if (fileDisplayArea.innerText.length < 1) {
+//     window.setTimeout(checkIfLoaded(), 500);
+//   } else {  
+//       stopwatch.stop();
+//       let minutes = Math.floor(stopwatch.elapsed.minutes);
+//       let seconds = stopwatch.elapsed.seconds % 60; 
+//       console.log('mins:' + minutes);
+//       console.log('secs: ' + seconds);
+//       displayUploadTime(minutes, seconds); 
+//   }
+// }
 
 window.onload = function() {
   let fileInput = document.getElementById('fileInput');
@@ -33,6 +55,7 @@ window.onload = function() {
   });
 
   fileInput.addEventListener('change', function(e) {
+    //stopwatch.start();    
       var file = fileInput.files[0];
       var textType = /text.*/;
       if (file.type.match(textType)) {
@@ -41,12 +64,18 @@ window.onload = function() {
             document.getElementById('uploaded-sequence').style.display = 'grid';
             fileDisplayArea.innerText = reader.result;
             uploadFile(fileInput.files[0].name, fileDisplayArea.innerText);
-            
           }
-          reader.readAsText(file);      
+          reader.readAsText(file);
+          // stopwatch.stop();
+          // let minutes = Math.floor(stopwatch.elapsed.minutes);
+          // let seconds = stopwatch.elapsed.seconds % 60; 
+          // console.log('mins:' + minutes);
+          // console.log('secs: ' + seconds);
+          // displayUploadTime(minutes, seconds);       
       } else {
           fileDisplayArea.innerText = "File not supported!"
       }
+      
   });
 }
 
@@ -87,8 +116,7 @@ class App extends Component {
          <div style={{display: 'inlineBlock'}}>
           <div>
             <div className="files">
-            <label style={{ float: 'left', marginTop: '20px', marginLeft: '20px' }}>1. &nbsp;</label>
-              <button  className='bttn' id="upload-files-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '0px' }} onClick={ uploadFilesPage }>Upload File/s</button>
+              <button  className='bttn' id="upload-files-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px' }} onClick={ uploadFilesPage }>Upload File/s</button>
               <button className='bttn' id="back-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px', display: 'none' }} onClick={ back }>Back</button>
             </div>
 
@@ -105,6 +133,8 @@ class App extends Component {
 
               <div className="input-files">
                 <input type="file" id="fileInput"/>
+                <br/>
+                <label style={{ float: 'left' }} id="upload-timer"></label>
               </div> 
 
               <div style={{ display: 'none', float: 'left' }} className="uploaded-sequence" id="uploaded-sequence">    

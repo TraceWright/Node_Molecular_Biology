@@ -103,7 +103,7 @@ export class Smith_Waterman extends Component {
 
       render() {
         return (
-            <div className="smith-waterman">
+            <div className="smith-waterman background">
                 <br/><br/>
                 <label>4. &nbsp;</label>
                 <button className='bttn' onClick={ this.handleMultipleSequences }>Run Smith-Waterman Algorithm</button>

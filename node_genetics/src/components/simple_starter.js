@@ -30,7 +30,6 @@ function setResultsState(results) {
     this.setState({ queryResults: results});
 }
 
-
 export class simple_starter extends Component {
     constructor(props) {
         super(props);
@@ -45,8 +44,10 @@ export class simple_starter extends Component {
         }
 
         setResultsState = setResultsState.bind(this);
+        this.checkIfLoaded = this.checkIfLoaded.bind(this);
+        this.main = this.main.bind(this);
         this.postData = this.postData.bind(this);
-        this.indexCreationMain = this.indexCreationMain.bind(this);
+        this.preprocess = this.preprocess.bind(this);
         this.accessIndexes = this.accessIndexes.bind(this);                
         this.getIndex = this.getIndex.bind(this);        
         this.createIndex = this.createIndex.bind(this);
@@ -108,21 +109,6 @@ export class simple_starter extends Component {
         // this.setState({ indexes: newState });
       }
 
-      takeSequences() {
-        let newState = [];
-        let fileNames = [];
-        fs.readdir('/home', function(e,f) {
-            f.forEach(function(element) {
-                fs.readFile(`/home/${element}`, 'utf-8', function(err, data) {
-                    fileNames.push(element);
-                    newState.push(data);
-                });
-            });
-        });
-        this.setState({ srcFileNames: fileNames });
-        this.setState({ sequences: newState });
-      }
-    
       submitSequence() {
         let seqInput = document.getElementById('queryInput').value;
         let charArray = [];
@@ -180,12 +166,31 @@ export class simple_starter extends Component {
             });
           });
       }
+      
+      accessIndexes() {
+        // console.log(this.state.indexes)
+
+      let jsonIndex = JSON.stringify(this.state.indexes)
+      fs.writeFile(`/index/index_1`, jsonIndex, function(err) {
+          if (err) {
+              console.log('Error: ' + err)
+          } else {
+              console.log(`index_1 saved`)
+              download(jsonIndex, 'test.txt', 'text/plain');
+          }
+      } ) 
+    }
+
+    displayIndexTime(indexTimes) {
+      document.getElementById('loader').style.display = 'none';
+      let indexTimer  = document.getElementById('index-timer');
+      indexTimes.minutes > 0 ? indexTimer.innerText = `${indexTimes.minutes}:${Math.round(indexTimes.seconds)} minutes`: indexTimer.innerText = `${Math.round(indexTimes.seconds)} seconds`;
+    }
 
       createIndex(ra, i_main) {
-
         this.createIndexBrowserLocation();
+        stopwatch.start();
         let queryLength = ra.length;
-
         let positionStart;
         let index = this.state.indexes;
         for (let j = 0; j < ra.length; j++) {
@@ -199,38 +204,60 @@ export class simple_starter extends Component {
                     index[exists].d[index[exists].d.length - 1][1] += 1;
                     index[exists].d[index[exists].d.length - 1][2].push(positionStart); 
                 }  
-            }      
+            }    
         }
+        stopwatch.stop();
+        let minutes = Math.floor(stopwatch.elapsed.minutes);
+        let seconds = stopwatch.elapsed.seconds % 60; 
+        console.log('mins:' + minutes);
+        console.log('secs: ' + seconds);
 
         this.setState({ indexes: index });
-        // console.log('index created')
+        return { minutes, seconds }
       }
 
-      accessIndexes() {
-          // console.log(this.state.indexes)
-
-        let jsonIndex = JSON.stringify(this.state.indexes)
-        fs.writeFile(`/index/index_1`, jsonIndex, function(err) {
-            if (err) {
-                console.log('Error: ' + err)
-            } else {
-                console.log(`index_1 saved`)
-                download(jsonIndex, 'test.txt', 'text/plain');
-            }
-        } ) 
-      }
-
-      indexCreationMain() {
-        stopwatch.start();
-        let sa = this.state.sequences;
-          for (let i = 0; i < sa.length; i++) {
-            let ta = this.tokeniseSequence(sa[i]);
-            let ra = this.createRotations(ta);
-            this.createIndex(ra, i);
-          }
-        stopwatch.stop();
-        console.log("minutes: " + stopwatch.elapsed.minutes + "seconds: " + stopwatch.elapsed.seconds)
+      preprocess() {
+        let sa;
+        let indexTimes = { minutes: 0, seconds: 0 };
+        sa = this.state.sequences
+        for (let i = 0; i < sa.length; i++) {
+          let ta = this.tokeniseSequence(sa[i]);
+          let ra = this.createRotations(ta);
+          let timer = this.createIndex(ra, i);
+          indexTimes.minutes += timer.minutes;
+          indexTimes.seconds += timer.seconds;
+        }
+        this.displayIndexTime(indexTimes);
       } 
+
+      checkIfLoaded() {
+        if (this.state.sequences.length < 1) {
+          window.setTimeout(this.checkIfLoaded, 200);
+        } else {
+          this.preprocess();
+        }
+      }
+      
+      takeSequences() {
+        let newState = [];
+        let fileNames = [];
+        fs.readdir('/home', function(e,f) {
+            f.forEach(function(element) {
+                fs.readFile(`/home/${element}`, 'utf-8', function(err, data) {
+                    fileNames.push(element);
+                    newState.push(data);
+                });
+            });
+        });
+        this.setState({ srcFileNames: fileNames });
+        this.setState({ sequences: newState });
+      }
+
+      main() {
+        document.getElementById('loader').style.display = 'grid';
+        this.takeSequences();
+        this.checkIfLoaded();
+      }
 
       calculateIDF(n, corpusLen) {
         return Math.log10(corpusLen / n);
@@ -241,7 +268,7 @@ export class simple_starter extends Component {
       }
 
       validateQuery(tokensArray) {
-        // check that the query tokens length == 7
+        // TODO: check that the query tokens length == 7
       }
 
       tokeniseQuery(querySeq) {
@@ -321,14 +348,14 @@ export class simple_starter extends Component {
 
   render() {
     return (
-        <div style={{display: 'inlineBlock'}}>
+        <div style={{display: 'inlineBlock'}} className="background">
           <div className="geneProcesser">
             <div className="query">
               <div className="queryInput">
-                <h3 style={{textAlign: 'left'}}>Query Sequence</h3><br/><br/>
-                <textarea placeholder="Enter a 4 base sequence (eg. AATT)" type="text" id='queryInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
-                <button id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.submitSequence}>Submit Query</button>
-                <button id="clearButton" style={{ marginTop: '20px'}} onClick={clearTextarea}>Clear Input</button>
+                <h3 style={{textAlign: 'left'}}>Query Sequences</h3><br/><br/>
+                <textarea placeholder="Enter sequences with a length of 7 bases, separated by a space (eg. AATTCAG GCGCTTA AATTCAG)" type="text" id='queryInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
+                <button className="bttn" id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.submitSequence}>Submit Query</button>
+                <button className="bttn" id="clearButton" style={{ marginTop: '20px'}} onClick={clearTextarea}>Clear Input</button>
               </div>
               <div className="queryDisplay" id="queryDisplay" style={{display: 'none'}}>
                 <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '200px', wordBreak: 'break-all', wordWrap: 'break-word'}}>{ this.state.seq }</label>
@@ -338,26 +365,26 @@ export class simple_starter extends Component {
               <ResultList results={ this.state.queryResults } />
             </div>
             <div className="search" style={{}}>
-              <h3>Search Sequence</h3><br/><br/>
-              <div className="searchQueryInput" id="searchQueryInput">
-              <br/><br/><br/>
-              <button className='bttn' id="saveFiles" onClick={ this.takeSequences }>Save Uploaded Sequence/s to SS Search State</button>
-              <br/><br/><br/>
-              <button className='bttn' id="indexCreationMainBttn" onClick={ this.indexCreationMain }>Main</button>
-              <br/><br/><br/>
-              {/* <button className='bttn' id="createIndexButton" onClick={ this.createIndex }>Create Index</button>
-              <br/><br/><br/> */}
-              <button className='bttn' id="postDataButton" onClick={ this.postData }>Post Data</button>
-              <br/><br/><br/>
-              <button className='bttn' id="accessIndexButton" onClick={ this.accessIndexes }>Access Index</button>
-              <br/><br/><br/>
-              <div className="index-dir-contents">
-                <label>/index directory contents:</label>
-                <div style={{paddingLeft: '50px', paddingTop: '10px'}} id="index-dir-content"></div>
-              </div>
-              {/* <label>Result Sequence:</label> */}
-              <br/><br/>
-              <label id="resultDisplayArea" style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></label>
+              <h3>Search Sequences</h3><br/><br/>
+              <div className="searchQueryInput" id="searchQueryInput">       
+                <br/><br/><br/>
+                <button className='bttn' id="mainBttn" onClick={ this.main }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button>
+                
+                <label style={{ paddingLeft: '40px' }} id="index-timer"></label>
+                <br/><br/><br/>
+                {/* <button className='bttn' id="createIndexButton" onClick={ this.createIndex }>Create Index</button>
+                <br/><br/><br/> */}
+                <button className='bttn' id="postDataButton" onClick={ this.postData }>Post Index to Database</button>
+                <br/><br/><br/>
+                <button className='bttn' id="accessIndexButton" onClick={ this.accessIndexes }>Download Index/Save Index to Browser</button>
+                <br/><br/><br/>
+                <div className="index-dir-contents">
+                  <label>/index directory contents:</label>
+                  <div style={{paddingLeft: '50px', paddingTop: '10px'}} id="index-dir-content"></div>
+                </div>
+                {/* <label>Result Sequence:</label> */}
+                <br/><br/>
+                <label id="resultDisplayArea" style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></label>
               </div>
             </div>
           </div>
