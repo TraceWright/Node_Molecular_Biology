@@ -46,7 +46,7 @@ server.post('/query', function(req, res, next) {
         assert.equal(null, err);
         let collection = db.collection('gene_indexes');
         // collection.find({k: req.body.data},{_id: 0, k:1,d:1}).toArray(function(err, result) { 
-        collection.find({k: { $in: req.body.data }},{_id: 0, k:1,d:1}).toArray(function(err, result) {
+        collection.find({k: { $in: req.body.data }},{_id: 1, k:1, d:1}).toArray(function(err, result) {
             assert.equal(err, null);
             //assert.equal(1, result.length);
             console.log("Found the following records");

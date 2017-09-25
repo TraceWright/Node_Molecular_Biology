@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import '../App.css';
 import * as fs from 'browserify-fs';
+import ResultList from './resultList';
 let Stopwatch = require("node-stopwatch").Stopwatch;
 let Client = require('node-rest-client').Client;
 
@@ -24,6 +25,11 @@ function download(text, name, type) {
     a.click();
 }
 
+// workaround: 'this' was not available inside client
+function setResultsState(results) {
+    this.setState({ queryResults: results});
+}
+
 
 export class simple_starter extends Component {
     constructor(props) {
@@ -34,9 +40,11 @@ export class simple_starter extends Component {
           rotArr: [], 
           sequences: [],
           indexes: [],
-          srcFileNames: []
+          srcFileNames: [],
+          queryResults: []
         }
-    
+
+        setResultsState = setResultsState.bind(this);
         this.postData = this.postData.bind(this);
         this.indexCreationMain = this.indexCreationMain.bind(this);
         this.accessIndexes = this.accessIndexes.bind(this);                
@@ -70,16 +78,16 @@ export class simple_starter extends Component {
       }
 
       postSearchQuery(queryStr) {
+        let results;
         var client = new Client();
         var args = {
           data: { data: queryStr },
           headers: { "Content-Type": "application/json" },
         };
-        console.log(queryStr);
-      client.post("http://localhost:4000/query", args, function (data, response) {
-        console.log(response);
-        console.log(JSON.parse(data.toString()));
-      });
+        client.post("http://localhost:4000/query", args, function (data, response) {
+          results = JSON.parse(data.toString());
+          setResultsState(results);
+        });
       }
     
       handleChange({ target }) {
@@ -247,8 +255,6 @@ export class simple_starter extends Component {
         let tokensArray = this.tokeniseQuery(this.state.seq);
         this.postSearchQuery(tokensArray);
 
-
-
         // let q = this.state.seq;
         // let s = this.state.indexes;
         // let match = s.findIndex(matchesKmer, q);
@@ -329,6 +335,7 @@ export class simple_starter extends Component {
                 <br/><br/><br/>
                 <button onClick={ this.searchIndex } style={{float: 'left', textAlign: 'left'}}>Search</button>
               </div>
+              <ResultList results={ this.state.queryResults } />
             </div>
             <div className="search" style={{}}>
               <h3>Search Sequence</h3><br/><br/>
