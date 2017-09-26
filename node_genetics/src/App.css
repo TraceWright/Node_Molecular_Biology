@@ -69,7 +69,10 @@
 
 .background {
   height: -webkit-fill-available;
-  background-image: url('genetics_background_2.png');
+  background: linear-gradient(
+    rgba(255, 255, 255, 0.50), 
+    rgba(255, 255, 255, 0.50)),
+    url("genetics_background_2.png");
   background-position: cover;
 }
 

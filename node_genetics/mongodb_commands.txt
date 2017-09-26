@@ -1,0 +1,13 @@
+C:\env\mongodb\bin>mongod.exe --dbpath C:\env\data\db  // start server at db location
+cd cd C:\env\mongodb\bin\       
+cd C:\env\mongodb\bin\mongo.exe     // start mongo cmd prompt
+
+db.node_genetics.insert({})
+use node_genetics
+
+show collections
+
+db.gene_indexes.find()
+db.gene_indexes.find({k: "AAAATT"})
+db.gene_indexes.find().count()
+db.gene_indexes.remove({})
