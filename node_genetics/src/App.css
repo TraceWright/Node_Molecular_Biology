@@ -20,9 +20,9 @@
 }
 
 .geneProcesser {
-  grid-template-columns: 20% 20% 20% 20%;
+  grid-template-columns: 10% 10% 10% 10% 10% 10% 10% 10%;
   grid-template-areas:
-    'search search search query'
+    'search search search search search query query query'
 }
 
 .file-uploader {

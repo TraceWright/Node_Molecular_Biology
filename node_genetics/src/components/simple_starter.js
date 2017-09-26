@@ -358,7 +358,7 @@ export class simple_starter extends Component {
                 <button className="bttn" id="clearButton" style={{ marginTop: '20px'}} onClick={clearTextarea}>Clear Input</button>
               </div>
               <div className="queryDisplay" id="queryDisplay" style={{display: 'none'}}>
-                <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '200px', wordBreak: 'break-all', wordWrap: 'break-word'}}>{ this.state.seq }</label>
+                <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word'}}>{ this.state.seq }</label>
                 <br/><br/><br/>
                 <button onClick={ this.searchIndex } style={{float: 'left', textAlign: 'left'}}>Search</button>
               </div>
