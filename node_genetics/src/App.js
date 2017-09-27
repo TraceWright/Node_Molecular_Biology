@@ -10,15 +10,31 @@ import { Burrows_Wheeler } from './components/burrows_wheeler';
 // let Stopwatch = require("node-stopwatch").Stopwatch;
 // let stopwatch = Stopwatch.create();
 
+function checkIfLoaded() {
+  let fileUploaded; 
+  fs.readdir('/home', function(e, f) {
+    fileUploaded = f;
+    if (fileUploaded) {
+      window.setTimeout(this.checkIfLoaded, 200);
+    } else {
+      return true;   
+    }
+  }); 
+  
+}
+
 function uploadFile(fileName, fileText) {
   let dirContents  = document.getElementById('dir-content');
   fs.writeFile(`/home/${fileName}`, fileText, function () {
-    fs.readFile(`/home/${fileName}`, 'utf-8', function(err, data) {
+    // fs.readFile(`/home/${fileName}`, 'utf-8', function(err, data) {
       fs.readdir('/home', function(e, f) {
-        let fileList = f.toString().split(',').join('\r\n');
-        dirContents.innerText = fileList;
+        let check = checkIfLoaded();
+        if (check = true) {
+          let fileList = f.toString().split(',').join('\r\n');
+          dirContents.innerText = fileList;
+        }
       }); 
-    });
+    // });
   });
 }
 
@@ -65,6 +81,7 @@ window.onload = function() {
           reader.onload = function(e) {
             document.getElementById('uploaded-sequence').style.display = 'grid';
             fileDisplayArea.innerText = reader.result;
+
             uploadFile(fileInput.files[0].name, fileDisplayArea.innerText);
           }
           reader.readAsText(file);
