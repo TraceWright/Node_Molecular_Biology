@@ -15,7 +15,7 @@ function checkIfLoaded() {
   fs.readdir('/home', function(e, f) {
     fileUploaded = f;
     if (!fileUploaded) {
-      window.setTimeout(this.checkIfLoaded, 200);
+      window.setTimeout(checkIfLoaded, 200);
     } else {
       let dirContents  = document.getElementById('dir-content');
       let fileList = f.toString().split(',').join('\r\n');
