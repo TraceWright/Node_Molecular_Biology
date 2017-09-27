@@ -47,8 +47,8 @@ window.onload = function() {
   let fileDisplayArea = document.getElementById('fileDisplayArea');
   let dirContents  = document.getElementById('dir-content');
 
-  fs.mkdir('/home/', function() {
-    fs.readdir('/home/', function(e, f) {
+  fs.mkdir('/home', function() {
+    fs.readdir('/home', function(e, f) {
       let fileList = f.toString().split(',').join('\r\n');
       dirContents.innerText = fileList;
     });
