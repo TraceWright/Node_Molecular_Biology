@@ -49,8 +49,10 @@ window.onload = function() {
 
   fs.mkdir('/home', function() {
     fs.readdir('/home', function(e, f) {
-      let fileList = f.toString().split(',').join('\r\n');
-      dirContents.innerText = fileList;
+      if (f) {
+        let fileList = f.toString().split(',').join('\r\n');
+        dirContents.innerText = fileList;
+      }
     });
   });
 
