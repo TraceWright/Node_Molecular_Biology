@@ -7,15 +7,13 @@ function initElement(elem) {
 };
 
 const ResultList = (props) => {
-    console.log(props);
     let uninvertedList = [];
     if (props.results.length > 0) {
         props.results.forEach(function(element) {
         
             for (let i = 0; i < element.d.length; i++) {
-            let docNo = element.d[i][0];
-            
-            uninvertedList[docNo] ? null : uninvertedList.push( [docNo] );
+                let docNo = element.d[i][0];
+                uninvertedList[docNo] ? null : uninvertedList.push( [docNo] );
             }
 
             for (let j = 0; j < element.d.length; j++) {
@@ -33,11 +31,8 @@ const ResultList = (props) => {
         })
        console.log(uninvertedList);
     }
-    // const resultItems = props.results.map((result) => {
-    //     return <ResultListItem key={result._id} result={result}/>
-    // })
+
     const resultItems = uninvertedList.map((result) => {
-        console.log(result)
         return <ResultListItem key={result[0]} result={result} />
     })
     return (        
