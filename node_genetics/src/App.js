@@ -14,10 +14,12 @@ function checkIfLoaded() {
   let fileUploaded; 
   fs.readdir('/home', function(e, f) {
     fileUploaded = f;
-    if (fileUploaded) {
+    if (!fileUploaded) {
       window.setTimeout(this.checkIfLoaded, 200);
     } else {
-      return true;   
+      let dirContents  = document.getElementById('dir-content');
+      let fileList = f.toString().split(',').join('\r\n');
+      dirContents.innerText = fileList;   
     }
   }); 
   
@@ -26,15 +28,7 @@ function checkIfLoaded() {
 function uploadFile(fileName, fileText) {
   let dirContents  = document.getElementById('dir-content');
   fs.writeFile(`/home/${fileName}`, fileText, function () {
-    // fs.readFile(`/home/${fileName}`, 'utf-8', function(err, data) {
-      fs.readdir('/home', function(e, f) {
-        let check = checkIfLoaded();
-        if (check == true) {
-          let fileList = f.toString().split(',').join('\r\n');
-          dirContents.innerText = fileList;
-        }
-      }); 
-    // });
+      checkIfLoaded();
   });
 }
 
