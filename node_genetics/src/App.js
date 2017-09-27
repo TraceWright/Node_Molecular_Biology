@@ -29,7 +29,7 @@ function uploadFile(fileName, fileText) {
     // fs.readFile(`/home/${fileName}`, 'utf-8', function(err, data) {
       fs.readdir('/home', function(e, f) {
         let check = checkIfLoaded();
-        if (check = true) {
+        if (check == true) {
           let fileList = f.toString().split(',').join('\r\n');
           dirContents.innerText = fileList;
         }
