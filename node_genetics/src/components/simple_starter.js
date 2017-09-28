@@ -5,7 +5,8 @@ import ResultList from './resultList';
 let Stopwatch = require("node-stopwatch").Stopwatch;
 let Client = require('node-rest-client').Client;
 
-let stopwatch = Stopwatch.create();
+let indexStopwatch = Stopwatch.create();
+let searchStopwatch = Stopwatch.create();
 
 function clearTextarea() {
     document.getElementById('seqInput').value = "";  
@@ -89,6 +90,13 @@ export class simple_starter extends Component {
           results = JSON.parse(data.toString());
           setResultsState(results);
         });
+        searchStopwatch.stop();
+        let minutes = Math.floor(searchStopwatch.elapsed.minutes);
+        let seconds = searchStopwatch.elapsed.seconds % 60;
+        console.log('mins:' + minutes);
+        console.log('secs: ' + seconds);
+
+        return { minutes, seconds }
       }
     
       handleChange({ target }) {
@@ -181,15 +189,13 @@ export class simple_starter extends Component {
       } ) 
     }
 
-    displayIndexTime(indexTimes) {
-      document.getElementById('loader').style.display = 'none';
-      let indexTimer  = document.getElementById('index-timer');
-      indexTimes.minutes > 0 ? indexTimer.innerText = `${indexTimes.minutes}:${Math.round(indexTimes.seconds)} minutes`: indexTimer.innerText = `${Math.round(indexTimes.seconds)} seconds`;
+    displayTimer(time, uiElement) {
+      time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
     }
 
       createIndex(ra, i_main) {
         this.createIndexBrowserLocation();
-        stopwatch.start();
+        indexStopwatch.start();
         let queryLength = ra.length;
         let positionStart;
         let index = this.state.indexes;
@@ -206,11 +212,11 @@ export class simple_starter extends Component {
                 }  
             }    
         }
-        stopwatch.stop();
-        let minutes = Math.floor(stopwatch.elapsed.minutes);
-        let seconds = stopwatch.elapsed.seconds % 60; 
-        console.log('mins:' + minutes);
-        console.log('secs: ' + seconds);
+        indexStopwatch.stop();
+        let minutes = Math.floor(indexStopwatch.elapsed.minutes);
+        let seconds = indexStopwatch.elapsed.seconds % 60; 
+        // console.log('mins:' + minutes);
+        // console.log('secs: ' + seconds);
 
         this.setState({ indexes: index });
         return { minutes, seconds }
@@ -223,11 +229,13 @@ export class simple_starter extends Component {
         for (let i = 0; i < sa.length; i++) {
           let ta = this.tokeniseSequence(sa[i]);
           let ra = this.createRotations(ta);
-          let timer = this.createIndex(ra, i);
+          let timer = this.createIndex(ra, i); // sets index in state and returns indexStopwatch result
           indexTimes.minutes += timer.minutes;
           indexTimes.seconds += timer.seconds;
         }
-        this.displayIndexTime(indexTimes);
+        document.getElementById('loader').style.display = 'none';
+        let indexTimer  = document.getElementById('index-timer');
+        this.displayTimer(indexTimes, indexTimer);
       } 
 
       checkIfLoaded() {
@@ -235,6 +243,7 @@ export class simple_starter extends Component {
           window.setTimeout(this.checkIfLoaded, 200);
         } else {
           this.preprocess();
+          console.log(this.state.srcFileNames);          
         }
       }
       
@@ -278,9 +287,11 @@ export class simple_starter extends Component {
       }
 
       searchIndex() {
-
+        searchStopwatch.start();
         let tokensArray = this.tokeniseQuery(this.state.seq);
-        this.postSearchQuery(tokensArray);
+        let timer = this.postSearchQuery(tokensArray);
+        let searchTimer  = document.getElementById('search-timer');       
+        this.displayTimer(timer, searchTimer);
 
         // let q = this.state.seq;
         // let s = this.state.indexes;
@@ -360,7 +371,8 @@ export class simple_starter extends Component {
               <div className="queryDisplay" id="queryDisplay" style={{display: 'none'}}>
                 <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word'}}>{ this.state.seq }</label>
                 <br/><br/><br/>
-                <button onClick={ this.searchIndex } style={{float: 'left', textAlign: 'left'}}>Search</button>
+                <button className="bttn" onClick={ this.searchIndex } style={{float: 'left', textAlign: 'left'}}>Search</button>
+                <label style={{float: 'left', textAlign: 'left'}} id="search-timer"></label>
               </div>
               <ResultList results={ this.state.queryResults } />
             </div>

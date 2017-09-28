@@ -1,4 +1,4 @@
-/home/ubuntu/Node_Molecular_Biology/node_genetics
+cd /home/ubuntu/Node_Molecular_Biology/node_genetics
 
 pm2 start npm --name "node_genetics" -- start
 

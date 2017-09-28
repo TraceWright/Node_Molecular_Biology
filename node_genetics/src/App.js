@@ -1,173 +1,197 @@
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
-import './App.css';
-import * as fs from 'browserify-fs';
+import './style.css';
+let Stopwatch = require("node-stopwatch").Stopwatch;
 
-import { simple_starter } from './components/simple_starter';
-import { Smith_Waterman } from './components/smith_waterman';
-import { Burrows_Wheeler } from './components/burrows_wheeler';
+let indexStopwatch = Stopwatch.create();
 
-// let Stopwatch = require("node-stopwatch").Stopwatch;
-// let stopwatch = Stopwatch.create();
-
-function checkIfLoaded() {
-  let fileUploaded; 
-  fs.readdir('/home', function(e, f) {
-    fileUploaded = f;
-    if (!fileUploaded) {
-      window.setTimeout(checkIfLoaded, 200);
-    } else {
-      let dirContents  = document.getElementById('dir-content');
-      let fileList = f.toString().split(',').join('\r\n');
-      dirContents.innerText = fileList;   
+function matchesKmer(element, index, array){
+    if (element.k === this) {
+        return index;
     }
-  }); 
-  
 }
-
-function uploadFile(fileName, fileText) {
-  let dirContents  = document.getElementById('dir-content');
-  fs.writeFile(`/home/${fileName}`, fileText, function () {
-      checkIfLoaded();
-  });
-}
-
-// function  displayUploadTime(minutes, seconds) {
-//   let uploadTimer  = document.getElementById('upload-timer');
-//   minutes > 0 ? uploadTimer.innerText = `${minutes}:${Math.round(seconds)} minutes`: uploadTimer.innerText = `${seconds.toFixed(3)} seconds`; 
-// }
-
-// function checkIfLoaded() {
-//   let fileDisplayArea = document.getElementById('fileDisplayArea');
-// console.log(fileDisplayArea.innerText)
-//   if (fileDisplayArea.innerText.length < 1) {
-//     window.setTimeout(checkIfLoaded(), 500);
-//   } else {  
-//       stopwatch.stop();
-//       let minutes = Math.floor(stopwatch.elapsed.minutes);
-//       let seconds = stopwatch.elapsed.seconds % 60; 
-//       console.log('mins:' + minutes);
-//       console.log('secs: ' + seconds);
-//       displayUploadTime(minutes, seconds); 
-//   }
-// }
 
 window.onload = function() {
-  let fileInput = document.getElementById('fileInput');
-  let fileDisplayArea = document.getElementById('fileDisplayArea');
-  let dirContents  = document.getElementById('dir-content');
-
-  fs.mkdir('/home', function() {
-    fs.readdir('/home', function(e, f) {
-      if (f) {
-        let fileList = f.toString().split(',').join('\r\n');
-        dirContents.innerText = fileList;
-      }
+    let fileInput = document.getElementById('fileInput');
+    let fileContents = document.getElementById('file-contents');
+    let notSupported = document.getElementById('not-supported');
+    
+    fileInput.addEventListener('change', function(e) {
+        var file = fileInput.files[0];
+        var textType = /text.*/;
+        if (file.type.match(textType)) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+              fileContents.value = reader.result;
+            }
+            reader.readAsText(file);
+        } else {
+            notSupported.innerText = "File not supported!"
+        }
     });
-  });
-
-  fileInput.addEventListener('change', function(e) {
-    //stopwatch.start();    
-      var file = fileInput.files[0];
-      var textType = /text.*/;
-      if (file.type.match(textType)) {
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            document.getElementById('uploaded-sequence').style.display = 'grid';
-            fileDisplayArea.innerText = reader.result;
-
-            uploadFile(fileInput.files[0].name, fileDisplayArea.innerText);
-          }
-          reader.readAsText(file);
-          // stopwatch.stop();
-          // let minutes = Math.floor(stopwatch.elapsed.minutes);
-          // let seconds = stopwatch.elapsed.seconds % 60; 
-          // console.log('mins:' + minutes);
-          // console.log('secs: ' + seconds);
-          // displayUploadTime(minutes, seconds);       
-      } else {
-          fileDisplayArea.innerText = "File not supported!"
-      }
-      
-  });
-}
-
-function clearBrowserFiles() {
-  let dirContents  = document.getElementById('dir-content');
-  dirContents.innerText = '';
-    fs.readdir('/home', function(e,f) {
-      f.forEach(function(element) {
-        fs.unlink('/home/' + element)
-      });
-    })
-  }
-
-function uploadFilesPage() {
-  document.getElementById('file-uploader').style.display = 'grid'; 
-  document.getElementById('search-components').style.display = 'none';  
-  document.getElementById('upload-files-btn').style.display = 'none';
-  document.getElementById('back-btn').style.display = 'grid';  
-     
-}
-
-function back() {
-  document.getElementById('file-uploader').style.display = 'none'; 
-  document.getElementById('search-components').style.display = 'grid';
-  document.getElementById('uploaded-sequence').style.display = 'none';
-  document.getElementById('back-btn').style.display = 'none';
-  document.getElementById('upload-files-btn').style.display = 'grid';
 }
 
 
 class App extends Component {
+    constructor(props) {
+        super(props);
+      
+        this.state = {
+            sequence: [],
+            sequences: [],
+            indexes: []
+        }
 
-  render() {
-    return (
-      <div className="App">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css"/>
-        <Router>
-         <div style={{display: 'inlineBlock'}}>
-          <div>
-            <div className="files">
-              <button  className='bttn' id="upload-files-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px' }} onClick={ uploadFilesPage }>Upload File/s</button>
-              <button className='bttn' id="back-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px', display: 'none' }} onClick={ back }>Back</button>
+        this.indexMain = this.indexMain.bind(this);        
+        this.createIndex = this.createIndex.bind(this);
+        this.tokeniseSequence = this.tokeniseSequence.bind(this);
+        this.createRotations = this.createRotations.bind(this);
+        this.handleChange = this.handleChange.bind(this); 
+        this.saveSequence = this.saveSequence.bind(this);
+    }
+
+    handleChange({ target }) {
+        this.setState({
+            [target.name]: target.value
+          });
+      }
+
+    displayTimer(time, uiElement) {
+      time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
+    }
+      
+    createIndex(ra, i_main) {
+        indexStopwatch.start();
+        let queryLength = ra.length;
+        let positionStart;
+        let index = this.state.indexes;
+        for (let j = 0; j < ra.length; j++) {
+            for (let i = 0; i < ra[j].length; i++) {
+                positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
+                let exists = index.findIndex(matchesKmer, ra[j][i]);
+                if (exists < 1) {
+                    index.push( { k: ra[j][i], d: [[i_main,1,[positionStart]]] }) 
+                } else {
+                    i_main === index[exists].d[index[exists].d.length - 1][0] ? null : index[exists].d.push([i_main,0,[]]);                   
+                    index[exists].d[index[exists].d.length - 1][1] += 1;
+                    index[exists].d[index[exists].d.length - 1][2].push(positionStart); 
+                }  
+            }    
+        }
+        indexStopwatch.stop();
+        let minutes = Math.floor(indexStopwatch.elapsed.minutes);
+        let seconds = indexStopwatch.elapsed.seconds % 60; 
+        this.setState({ indexes: index });
+        return { minutes, seconds }          
+    }
+
+    createRotations(seqArr) {
+        let prev = '';
+        let rotationArr = [];
+        let ql = seqArr[0].length;
+
+        rotationArr[0] = seqArr;
+        for (let i = 1; i < ql; i++) {
+            rotationArr[i] = [];
+            prev = '';
+            for (let j = 0; j < seqArr.length - 1; j++) {
+                let current = seqArr[j].slice(0, ql-i);
+                rotationArr[i][j] = `${prev}${current}`
+                prev = seqArr[j].slice(ql-i, ql);
+              }      
+            }
+        return rotationArr;
+    }
+
+    tokeniseSequence(s) {
+        let tok = s.replace('/,/g' , '')
+        let tokArray = tok.match(/.{1,7}/g);
+        return tokArray;
+    }
+        
+    indexMain() {
+    document.getElementById('loader').style.display = 'grid';
+      let sa;
+      let indexTimes = { minutes: 0, seconds: 0 };
+      sa = this.state.sequences
+      for (let i = 0; i < sa.length; i++) {
+        let ta = this.tokeniseSequence(sa[i]);
+        let ra = this.createRotations(ta);
+        let timer = this.createIndex(ra, i); // sets index in state and returns indexStopwatch result
+        indexTimes.minutes += timer.minutes;
+        indexTimes.seconds += timer.seconds;
+    }
+      let indexTimer  = document.getElementById('index-timer');
+      this.displayTimer(indexTimes, indexTimer);
+      document.getElementById('loader').style.display = 'none'; 
+      console.log(this.state.indexes)
+    }
+
+    saveSequence() {
+        console.log(this.state.sequences);
+        let fileContents = document.getElementById('file-contents').value;
+        this.setState({ sequences: [...this.state.sequences, fileContents] });
+    }
+
+    uploadFilesPage() {
+        document.getElementById('file-uploads').style.display = 'grid';
+        document.getElementById('back-btn').style.display = 'grid'; 
+        document.getElementById('upload-files-btn').style.display = 'none'; 
+        document.getElementById('indexing-querying').style.display = 'none';
+    }
+
+    back() {
+        document.getElementById('back-btn').style.display = 'none'; 
+        document.getElementById('file-uploads').style.display = 'none';
+        document.getElementById('upload-files-btn').style.display = 'grid';
+        document.getElementById('indexing-querying').style.display = 'grid';
+    }
+
+    render() {
+      return (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{display: 'inlineBlock'}} className="background">
+                <div className="upload-back">
+                  <button  className='buttn' id="upload-files-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px' }} onClick={ this.uploadFilesPage }>Upload File/s</button>
+                  <button className='buttn' id="back-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px', display: 'none' }} onClick={ this.back }>Back</button>
+                </div>
+
+                <div id="file-uploads" style={{ paddingTop: '80px', paddingLeft: '50px', textAlign: 'left', display: 'none' }}> 
+                    <div className="input-files">
+                        <input type="file" id="fileInput" className='buttn'/>
+                    </div> 
+
+                    <div style={{ float: 'left', paddingLeft: '50px' }} className="uploaded-sequence" id="uploaded-sequence">
+                        <br/><br/>    
+                        <label style={{ textAlign: 'left' }}>File Contents:</label>
+                        <br/><br/>
+                        <label id="not-supported"/>
+                        <br/>
+                        <textarea name="sequence" value={ this.state.sequence } onChange={ this.handleChange } id="file-contents" style={{height: '500px', float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></textarea>
+                        <br/>
+                    </div>
+
+                    <div>
+                    <button onClick={ this.saveSequence } style={{ marginTop: '20px', float: 'left', marginLeft: '50px' }} className='buttn'>Submit</button>
+                    </div>
+                </div>
+
+                <div className="indexing-querying" id="indexing-querying"> 
+                    <div className="indexing">
+                        <h2 className="heading">Indexing</h2><br/><br/>
+                        <button className='buttn' id="mainBttn" onClick={ this.indexMain }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button>
+                        <label style={{ paddingLeft: '40px' }} id="index-timer"></label>
+                        <br/><br/><br/>
+                        <button className='bttn' id="postDataButton" onClick={ this.postData }>Post Index to Database</button>
+                        <br/><br/><br/>
+                    </div>
+
+                    <div className="querying">
+                        <h2 className="heading">Querying</h2><br/><br/>
+                    </div>
+                </div>
             </div>
-
-            <div style={{ display: 'none'}} className="file-uploader" id="file-uploader">
-
-              <div className="dir-contents">
-                <label>Directory Contents:</label>
-                <div style={{paddingLeft: '50px', paddingTop: '10px'}} id="dir-content"></div>
-              </div>
-
-            <div className="clear-dir">
-                <button onClick={ clearBrowserFiles }>Clear Directory</button>
-              </div>
-
-              <div className="input-files">
-                <input type="file" id="fileInput"/>
-                <br/>
-                <label style={{ float: 'left' }} id="upload-timer"></label>
-              </div> 
-
-              <div style={{ display: 'none', float: 'left' }} className="uploaded-sequence" id="uploaded-sequence">    
-                <label style={{ textAlign: 'left' }}>File Contents:</label>
-                <br/><br/>
-                <label id="fileDisplayArea" style={{float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></label>
-              </div>
-
-            </div>
-            <div id="search-components">
-              <Route path="/simple_starter" component={simple_starter}/>
-              <Route path="/smith_waterman" component={Smith_Waterman}/>
-              <Route path="/burrows_wheeler" component={Burrows_Wheeler}/>
-            </div>
-          </div>
         </div>
-        </Router>
-      </div>
-    );
-  }
+    )}
 }
 
 export default App;
