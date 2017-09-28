@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './style.css';
+import ResultList from './components/resultList';
 let Stopwatch = require("node-stopwatch").Stopwatch;
 let Client = require('node-rest-client').Client;
 
@@ -203,9 +204,7 @@ class App extends Component {
         return tokArray;
     }
         
-    indexMain() {
-        console.log(this.state.queryResults)
-        
+    indexMain() {        
     document.getElementById('loader').style.display = 'grid';
       let sa;
       let indexTimes = { minutes: 0, seconds: 0 };
@@ -220,11 +219,9 @@ class App extends Component {
       let indexTimer  = document.getElementById('index-timer');
       this.displayTimer(indexTimes, indexTimer);
       document.getElementById('loader').style.display = 'none'; 
-      console.log(this.state.indexes)
     }
 
     saveSequence() {
-        console.log(this.state.sequences);
         let fileContents = document.getElementById('file-contents').value;
         this.setState({ sequences: [...this.state.sequences, fileContents] });
     }
@@ -289,7 +286,12 @@ class App extends Component {
                         <br/><br/><br/>
                         <button className="buttn" id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.searchMain}>Submit Query</button>
                         <label style={{float: 'left', textAlign: 'left'}} id="search-timer"></label>
+                    
+                        <div style={{paddingTop: '50px'}}>
+                            <ResultList results={ this.state.queryResults } />
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>
