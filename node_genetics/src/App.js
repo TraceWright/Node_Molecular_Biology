@@ -1,13 +1,20 @@
 import React, { Component } from 'react';
 import './style.css';
 let Stopwatch = require("node-stopwatch").Stopwatch;
+let Client = require('node-rest-client').Client;
 
 let indexStopwatch = Stopwatch.create();
+let searchStopwatch = Stopwatch.create();
 
 function matchesKmer(element, index, array){
     if (element.k === this) {
         return index;
     }
+}
+
+// workaround: 'this' was not available inside client
+function setResultsState(results) {
+    this.setState({ queryResults: results});
 }
 
 window.onload = function() {
@@ -38,9 +45,15 @@ class App extends Component {
         this.state = {
             sequence: [],
             sequences: [],
-            indexes: []
+            indexes: [], 
+            queryResults: []
         }
 
+        setResultsState = setResultsState.bind(this);        
+        this.searchIndex = this.searchIndex.bind(this);        
+        this.submitSequence = this.submitSequence.bind(this);
+        this.searchMain = this.searchMain.bind(this);        
+        this.postData = this.postData.bind(this);        
         this.indexMain = this.indexMain.bind(this);        
         this.createIndex = this.createIndex.bind(this);
         this.tokeniseSequence = this.tokeniseSequence.bind(this);
@@ -52,7 +65,89 @@ class App extends Component {
     handleChange({ target }) {
         this.setState({
             [target.name]: target.value
-          });
+        });
+    }
+
+    postSearchQuery(queryStr) {
+        let results;
+        var client = new Client();
+        var args = {
+          data: { data: queryStr },
+          headers: { "Content-Type": "application/json" },
+        };
+        client.post("http://localhost:4000/query", args, function (data, response) {
+          results = JSON.parse(data.toString());
+          setResultsState(results);
+        });
+        searchStopwatch.stop();
+        let minutes = Math.floor(searchStopwatch.elapsed.minutes);
+        let seconds = searchStopwatch.elapsed.seconds % 60;
+        console.log('mins:' + minutes);
+        console.log('secs: ' + seconds);
+
+        return { minutes, seconds }
+    }
+
+    validateQuery(tokensArray) {
+        // TODO: check that the query tokens length == 7
+      }
+
+    tokeniseQuery(querySeq) {
+        let tokensArray = querySeq.split(' ');
+        //this.validateQuery(tokensArray);
+        return tokensArray;
+    }
+
+    searchIndex() {
+        searchStopwatch.start();
+        let tokensArray = this.tokeniseQuery(this.state.seq);
+        let timer = this.postSearchQuery(tokensArray);
+        let searchTimer  = document.getElementById('search-timer');       
+        this.displayTimer(timer, searchTimer);
+    }
+
+    submitSequence() {
+        let seqInput = document.getElementById('queryInput').value;
+        let charArray = [];
+        charArray = seqInput.split('')
+        let charOutput = '';
+        let charLength = charArray.length;
+        for(let i=0; i < charLength; i+=100) {
+          if(i+100 < charLength) {
+            charOutput += charArray.slice(i,i+100).join("");
+            charOutput += '\n----\n';
+          }
+          else {
+            charOutput += charArray.slice(i,charLength).join("");
+          }
+        }
+        this.setState({ seq: charOutput })
+        document.getElementById('queryInput').style.display = 'none'; 
+        document.getElementById('querySeq').style.display = 'block'; 
+        document.getElementById('submitButton').style.display = 'none';
+    }
+
+    searchMain() {
+        this.submitSequence();
+        this.searchIndex();
+        console.log(this.state.queryResults)
+    }
+
+    postData() {
+        console.log(this.state.indexes)
+        let jsonIndex = JSON.stringify(this.state.indexes)
+        var client = new Client();
+        var args = {
+          data: { data: jsonIndex },
+          headers: { "Content-Type": "application/json" },
+          body: this.state.index
+        };  
+        client.post("http://localhost:4000/index", args, function (data, response) {
+          // parsed response body as js object 
+          console.log("hello");
+          // raw response 
+          console.log(response);
+        }); 
       }
 
     displayTimer(time, uiElement) {
@@ -109,6 +204,8 @@ class App extends Component {
     }
         
     indexMain() {
+        console.log(this.state.queryResults)
+        
     document.getElementById('loader').style.display = 'grid';
       let sa;
       let indexTimes = { minutes: 0, seconds: 0 };
@@ -181,12 +278,17 @@ class App extends Component {
                         <button className='buttn' id="mainBttn" onClick={ this.indexMain }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button>
                         <label style={{ paddingLeft: '40px' }} id="index-timer"></label>
                         <br/><br/><br/>
-                        <button className='bttn' id="postDataButton" onClick={ this.postData }>Post Index to Database</button>
+                        <button className='buttn' id="postDataButton" onClick={ this.postData }>Post Index to Database</button>
                         <br/><br/><br/>
                     </div>
 
                     <div className="querying">
                         <h2 className="heading">Querying</h2><br/><br/>
+                        <textarea placeholder="Enter sequences with a length of 7 bases, separated by a space (eg. AATTCAG GCGCTTA AATTCAG)" type="text" id='queryInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
+                        <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word', display: 'none'}}>{ this.state.seq }</label>
+                        <br/><br/><br/>
+                        <button className="buttn" id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.searchMain}>Submit Query</button>
+                        <label style={{float: 'left', textAlign: 'left'}} id="search-timer"></label>
                     </div>
                 </div>
             </div>
