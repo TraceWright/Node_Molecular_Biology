@@ -9,7 +9,7 @@ var url = 'mongodb://localhost:27017/node_genetics';
 
 const server = express();
 const PORT = 4000;
-server.use('*', cors({ origin: 'http://localhost:3000' }));
+server.use('*', cors({ origin: 'http://node_genetics.traceywright.org' }));
 
 server.use(bodyParser.json({limit: '100mb'}));
 server.use(bodyParser.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }));
