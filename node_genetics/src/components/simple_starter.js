@@ -29,6 +29,9 @@ function download(text, name, type) {
 // workaround: 'this' was not available inside client
 function setResultsState(results) {
     this.setState({ queryResults: results});
+    searchStopwatch.stop();
+    let minutes = Math.floor(searchStopwatch.elapsed.minutes);
+    let seconds = searchStopwatch.elapsed.seconds % 60;
 }
 
 export class simple_starter extends Component {
@@ -90,9 +93,8 @@ export class simple_starter extends Component {
           results = JSON.parse(data.toString());
           setResultsState(results);
         });
-        searchStopwatch.stop();
-        let minutes = Math.floor(searchStopwatch.elapsed.minutes);
-        let seconds = searchStopwatch.elapsed.seconds % 60;
+        
+        
         console.log('mins:' + minutes);
         console.log('secs: ' + seconds);
 

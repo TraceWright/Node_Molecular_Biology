@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import './style.css';
 import ResultList from './components/resultList';
+import SearchTimer from './components/searchTimer'
 let Stopwatch = require("node-stopwatch").Stopwatch;
 let Client = require('node-rest-client').Client;
 
 let indexStopwatch = Stopwatch.create();
-let searchStopwatch = Stopwatch.create();
+// let searchStopwatch = Stopwatch.create();
 
 function matchesKmer(element, index, array){
     if (element.k === this) {
@@ -16,6 +17,9 @@ function matchesKmer(element, index, array){
 // workaround: 'this' was not available inside client
 function setResultsState(results) {
     this.setState({ queryResults: results});
+    let searchTimeEnd = Date.now();
+    document.getElementById('search-timer').style.display = 'grid';
+    this.setState({ searchTime:  searchTimeEnd - this.state.searchTimeStart});
 }
 
 window.onload = function() {
@@ -47,7 +51,9 @@ class App extends Component {
             sequence: [],
             sequences: [],
             indexes: [], 
-            queryResults: []
+            queryResults: [],
+            searchTimeStart: 0,
+            searchTime: 0
         }
 
         setResultsState = setResultsState.bind(this);        
@@ -79,14 +85,7 @@ class App extends Component {
         client.post("http://localhost:4000/query", args, function (data, response) {
           results = JSON.parse(data.toString());
           setResultsState(results);
-        });
-        searchStopwatch.stop();
-        let minutes = Math.floor(searchStopwatch.elapsed.minutes);
-        let seconds = searchStopwatch.elapsed.seconds % 60;
-        console.log('mins:' + minutes);
-        console.log('secs: ' + seconds);
-
-        return { minutes, seconds }
+        });     
     }
 
     validateQuery(tokensArray) {
@@ -100,11 +99,11 @@ class App extends Component {
     }
 
     searchIndex() {
-        searchStopwatch.start();
         let tokensArray = this.tokeniseQuery(this.state.seq);
-        let timer = this.postSearchQuery(tokensArray);
-        let searchTimer  = document.getElementById('search-timer');       
-        this.displayTimer(timer, searchTimer);
+        let startSearchTime = Date.now();
+        console.log(startSearchTime);
+        this.setState({ searchTimeStart: startSearchTime })
+        this.postSearchQuery(tokensArray);
     }
 
     submitSequence() {
@@ -151,9 +150,9 @@ class App extends Component {
         }); 
       }
 
-    displayTimer(time, uiElement) {
-      time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
-    }
+    // displayTimer(time, uiElement) {
+    //   time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
+    // }
       
     createIndex(ra, i_main) {
         indexStopwatch.start();
@@ -285,8 +284,9 @@ class App extends Component {
                         <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word', display: 'none'}}>{ this.state.seq }</label>
                         <br/><br/><br/>
                         <button className="buttn" id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.searchMain}>Submit Query</button>
-                        <label style={{float: 'left', textAlign: 'left'}} id="search-timer"></label>
-                    
+                        <div id="search-timer" style={{ display: 'none' }}>
+                            <SearchTimer timer={ this.state.searchTime } />  
+                        </div>                  
                         <div style={{paddingTop: '50px'}}>
                             <ResultList results={ this.state.queryResults } />
                         </div>
