@@ -125,6 +125,8 @@ class App extends Component {
         document.getElementById('queryInput').style.display = 'none'; 
         document.getElementById('querySeq').style.display = 'block'; 
         document.getElementById('submitButton').style.display = 'none';
+        document.getElementById('new-query-button').style.display = 'grid'; 
+        document.getElementById('results-list').style.display = 'grid';                            
     }
 
     searchMain() {
@@ -220,6 +222,15 @@ class App extends Component {
       document.getElementById('loader').style.display = 'none'; 
     }
 
+    newQuery() {
+        document.getElementById('queryInput').style.display = 'grid'; 
+        document.getElementById('querySeq').style.display = 'none'; 
+        document.getElementById('submitButton').style.display = 'grid';
+        document.getElementById('new-query-button').style.display = 'none';
+        document.getElementById('search-timer').style.display = 'none';
+        document.getElementById('results-list').style.display = 'none';                    
+    }
+
     saveSequence() {
         let fileContents = document.getElementById('file-contents').value;
         this.setState({ sequences: [...this.state.sequences, fileContents] });
@@ -283,11 +294,12 @@ class App extends Component {
                         <textarea placeholder="Enter sequences with a length of 7 bases, separated by a space (eg. AATTCAG GCGCTTA AATTCAG)" type="text" id='queryInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
                         <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word', display: 'none'}}>{ this.state.seq }</label>
                         <br/><br/><br/>
+                        <button className="buttn" id="new-query-button" style={{float: 'right', marginTop: '20px', display: 'none'}} onClick={this.newQuery}>New Query</button>
                         <button className="buttn" id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.searchMain}>Submit Query</button>
                         <div id="search-timer" style={{ display: 'none' }}>
                             <SearchTimer timer={ this.state.searchTime } />  
                         </div>                  
-                        <div style={{paddingTop: '50px'}}>
+                        <div id="results-list" style={{paddingTop: '100px'}}>
                             <ResultList results={ this.state.queryResults } />
                         </div>
                     </div>

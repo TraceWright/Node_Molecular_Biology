@@ -16,6 +16,7 @@ const ResultListItem = ({result}) => {
    return (
         <ListGroupItem>
             {kmers}
+            <hr id="line"/>
         </ListGroupItem>
     )
 }
