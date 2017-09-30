@@ -9,3 +9,8 @@ pm2 startOrRestart ecosystem.config.js // default command found in most tuts: do
 pm2 delete node_genetics
 
 pm2 list 
+
+cd /etc/nginx/
+sudo sh -c "echo -n 'tracey:' >> /etc/nginx/.htpasswd"
+sudo sh -c "openssl passwd -apr1 >> /etc/nginx/.htpasswd"
+cat .htpasswd

@@ -14,12 +14,87 @@ function matchesKmer(element, index, array){
     }
 }
 
+function initElement(elem) {
+    elem.push({ kmer: ['', 0, []] })
+};
+
+function sortResults(sortingArray) {
+    console.log(sortingArray)
+    let sortedArray = sortingArray.sort((a, b) => {     
+        if (a[a.length - 1].rank > b[b.length - 1].rank) {
+            return -1;
+          }
+        if (a[a.length - 1].rank < b[b.length - 1].rank) {
+          return 1;
+        }
+        return 0;
+    });
+    return sortedArray;
+}
+
+function calculateTFIDF(tf, idf) {
+    return tf * idf;
+}
+
+function calculateIDF(uninvertedList, kmer) {
+    let n = uninvertedList.reduce(function(accumulator, currentValue) {
+        let testArray = [];
+        for (let i = 1; i < currentValue.length - 1; i++) {
+            testArray.push(currentValue[i].kmer[0]);}
+        let exists = testArray.indexOf(kmer);
+        // exists >= 0 ? inDocument = accumulator + 1 : inDocument = accumulator;
+        // return inDocument;
+
+        let inDocument = exists >=0 ? accumulator + 1 : accumulator;
+        return inDocument;
+    },0)
+    return Math.log10((uninvertedList.length / n) + 1);
+}
+
 // workaround: 'this' was not available inside client
-function setResultsState(results) {
-    this.setState({ queryResults: results});
-    let searchTimeEnd = Date.now();
+function rankResults(results) {
     document.getElementById('search-timer').style.display = 'grid';
+    let searchTimeEnd = Date.now();
     this.setState({ searchTime:  searchTimeEnd - this.state.searchTimeStart});
+    let uninvertedList = uninvertList(results);
+    for (let i = 0; i < uninvertedList.length; i++) {
+        uninvertedList[i].push({rank: 0});
+        for (let j = 1; j < uninvertedList[i].length - 1; j++) {
+            let kmer = uninvertedList[i][j].kmer[0];
+            let idf = calculateIDF(uninvertedList, kmer);
+            let tfidf = calculateTFIDF(uninvertedList[i][j].kmer[1], idf);
+            uninvertedList[i][uninvertedList[i].length - 1].rank += tfidf;
+        }
+    }
+    let sortedList = sortResults(uninvertedList);
+    this.setState({sortedList: sortedList});
+}
+
+// workaround: 'this' was not available inside client
+function uninvertList(results) {
+    let uninvertedList = [];
+    if (results.length > 0) {
+        results.forEach(function(element) {
+        
+            for (let i = 0; i < element.d.length; i++) {
+                let docNo = element.d[i][0];
+                uninvertedList[docNo] ? null : uninvertedList.push( [docNo] );
+            }
+
+            for (let j = 0; j < element.d.length; j++) {
+            
+                for (let k = 0; k < uninvertedList.length; k++) {
+                    if (uninvertedList[k][0] === element.d[j][0]) {
+                        initElement(uninvertedList[k]);
+                        uninvertedList[k][uninvertedList[k].length-1].kmer[0] = element.k;
+                        uninvertedList[k][uninvertedList[k].length-1].kmer[1] = element.d[j][1];
+                        uninvertedList[k][uninvertedList[k].length-1].kmer[2] = element.d[j][2];
+                    }
+                }
+            };
+        })
+       return uninvertedList;
+    }
 }
 
 window.onload = function() {
@@ -51,12 +126,12 @@ class App extends Component {
             sequence: [],
             sequences: [],
             indexes: [], 
-            queryResults: [],
             searchTimeStart: 0,
-            searchTime: 0
+            searchTime: 0,
+            sortedList: []
         }
 
-        setResultsState = setResultsState.bind(this);        
+        rankResults = rankResults.bind(this); 
         this.searchIndex = this.searchIndex.bind(this);        
         this.submitSequence = this.submitSequence.bind(this);
         this.searchMain = this.searchMain.bind(this);        
@@ -84,13 +159,18 @@ class App extends Component {
         };
         client.post("http://localhost:4000/query", args, function (data, response) {
           results = JSON.parse(data.toString());
-          setResultsState(results);
+          rankResults(results);
+          uninvertList(results);
         });     
     }
 
     validateQuery(tokensArray) {
         // TODO: check that the query tokens length == 7
-      }
+    }
+
+    setToUppercase() {
+        // TODO: require all input to be uppercase
+    }
 
     tokeniseQuery(querySeq) {
         let tokensArray = querySeq.split(' ');
@@ -101,7 +181,6 @@ class App extends Component {
     searchIndex() {
         let tokensArray = this.tokeniseQuery(this.state.seq);
         let startSearchTime = Date.now();
-        console.log(startSearchTime);
         this.setState({ searchTimeStart: startSearchTime })
         this.postSearchQuery(tokensArray);
     }
@@ -152,9 +231,9 @@ class App extends Component {
         }); 
       }
 
-    // displayTimer(time, uiElement) {
-    //   time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
-    // }
+    displayTimer(time, uiElement) {
+      time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
+    }
       
     createIndex(ra, i_main) {
         indexStopwatch.start();
@@ -300,7 +379,7 @@ class App extends Component {
                             <SearchTimer timer={ this.state.searchTime } />  
                         </div>                  
                         <div id="results-list" style={{paddingTop: '100px'}}>
-                            <ResultList results={ this.state.queryResults } />
+                            <ResultList results={ this.state.sortedList } />
                         </div>
                     </div>
 

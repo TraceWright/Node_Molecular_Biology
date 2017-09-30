@@ -7,6 +7,7 @@ const ResultListItem = ({result}) => {
    //const results = props.queryResults;
 
    result.splice(0,1);
+   result.splice(result.length - 1,1);
    let a = 0;
 
     const kmers = result.map((km) => {
