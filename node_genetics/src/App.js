@@ -51,19 +51,53 @@ function calculateIDF(uninvertedList, kmer) {
     return Math.log10((uninvertedList.length / n) + 1);
 }
 
-// workaround: 'this' was not available inside client
-function rankResults(results) {
+function endSearchTime() {
     document.getElementById('search-timer').style.display = 'grid';
     let searchTimeEnd = Date.now();
     this.setState({ searchTime:  searchTimeEnd - this.state.searchTimeStart});
-    let uninvertedList = uninvertList(results);
+}
+
+function initVectors(queryTokens, uninvertedList) {
+    let vectors = [];
     for (let i = 0; i < uninvertedList.length; i++) {
-        uninvertedList[i].push({rank: 0});
-        for (let j = 1; j < uninvertedList[i].length - 1; j++) {
-            let kmer = uninvertedList[i][j].kmer[0];
-            let idf = calculateIDF(uninvertedList, kmer);
-            let tfidf = calculateTFIDF(uninvertedList[i][j].kmer[1], idf);
-            uninvertedList[i][uninvertedList[i].length - 1].rank += tfidf;
+        vectors.push([]);
+        let k = 0;
+        for (let j = 1; j < uninvertedList[i].length && k < queryTokens.length; j++) {
+            // console.log(queryTokens[k]);
+            // console.log(uninvertedList[i][j].kmer[0]);
+            if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
+                vectors[i].push({ token: queryTokens[k], tf: uninvertedList[i][j].kmer[1] });
+                k++
+                k === queryTokens.length ? j = uninvertedList.length : j = 0;
+            } else if (j === uninvertedList[i].length - 1) {
+                vectors[i].push({ token: queryTokens[k], tf: 0 });
+                k++
+            }
+        }
+    }
+}
+
+// workaround: 'this' was not available inside client
+function rankResults(results) {
+    endSearchTime();
+    let uninvertedList = uninvertList(results);
+
+    let rankMethod = 0; // TODO: attach to ui select    
+    if (rankMethod === 0) {
+        console.log(this.state.querySeq);
+        let queryTokens = this.tokeniseQuery(this.state.querySeq);
+        console.log(uninvertedList);
+        let vectors = initVectors(queryTokens, uninvertedList);
+        
+    } else {
+        for (let i = 0; i < uninvertedList.length; i++) {
+            uninvertedList[i].push({rank: 0});
+            for (let j = 1; j < uninvertedList[i].length - 1; j++) {
+                let kmer = uninvertedList[i][j].kmer[0];            
+                let idf = calculateIDF(uninvertedList, kmer);
+                let tfidf = calculateTFIDF(uninvertedList[i][j].kmer[1], idf);
+                uninvertedList[i][uninvertedList[i].length - 1].rank += tfidf;
+            }
         }
     }
     let sortedList = sortResults(uninvertedList);
@@ -125,12 +159,14 @@ class App extends Component {
         this.state = {
             sequence: [],
             sequences: [],
+            querySeq: [],
             indexes: [], 
             searchTimeStart: 0,
             searchTime: 0,
             sortedList: []
         }
 
+        endSearchTime = endSearchTime.bind(this);
         rankResults = rankResults.bind(this); 
         this.searchIndex = this.searchIndex.bind(this);        
         this.submitSequence = this.submitSequence.bind(this);
@@ -188,8 +224,7 @@ class App extends Component {
         return tokensArray;
     }
 
-    searchIndex() {
-        let tokensArray = this.tokeniseQuery(this.state.seq);
+    searchIndex(tokensArray) {
         let startSearchTime = Date.now();
         this.setState({ searchTimeStart: startSearchTime })
         this.postSearchQuery(tokensArray);
@@ -197,31 +232,19 @@ class App extends Component {
 
     submitSequence() {
         let seqInput = document.getElementById('queryInput').value;
-        let charArray = [];
-        charArray = seqInput.split('')
-        let charOutput = '';
-        let charLength = charArray.length;
-        for(let i=0; i < charLength; i+=100) {
-          if(i+100 < charLength) {
-            charOutput += charArray.slice(i,i+100).join("");
-            charOutput += '\n----\n';
-          }
-          else {
-            charOutput += charArray.slice(i,charLength).join("");
-          }
-        }
-        this.setState({ seq: charOutput })
         document.getElementById('queryInput').style.display = 'none'; 
         document.getElementById('querySeq').style.display = 'block'; 
         document.getElementById('submitButton').style.display = 'none';
         document.getElementById('new-query-button').style.display = 'grid'; 
-        document.getElementById('results-list').style.display = 'grid';                            
+        document.getElementById('results-list').style.display = 'grid';    
+        return seqInput;                        
     }
 
     searchMain() {
-        this.submitSequence();
-        this.searchIndex();
-        console.log(this.state.queryResults)
+        let seqQuery = this.submitSequence();
+        let queryTokens = this.tokeniseQuery(seqQuery);
+        this.searchIndex(queryTokens);
+        this.setState({ querySeq: seqQuery });
     }
 
     postData() {
@@ -382,8 +405,8 @@ class App extends Component {
 
                     <div className="querying">
                         <h2 className="heading">Querying</h2><br/><br/>
-                        <textarea placeholder="Enter sequences with a length of 7 bases, separated by a space (eg. AATTCAG GCGCTTA AATTCAG)" type="text" id='queryInput' name="seq" onChange={ this.handleChange } value={ this.state.seq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
-                        <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word', display: 'none'}}>{ this.state.seq }</label>
+                        <textarea placeholder="Enter sequences with a length of 7 bases, separated by a space (eg. AATTCAG GCGCTTA AATTCAG)" type="text" id='queryInput' name="querySeq" onChange={ this.handleChange } value={ this.state.querySeq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
+                        <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word', display: 'none'}}>{ this.state.querySeq }</label>
                         <br/><br/><br/>
                         <button className="buttn" id="new-query-button" style={{float: 'right', marginTop: '20px', display: 'none'}} onClick={this.newQuery}>New Query</button>
                         <button className="buttn" id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.searchMain}>Submit Query</button>
