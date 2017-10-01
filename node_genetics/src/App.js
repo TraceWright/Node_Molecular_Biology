@@ -62,7 +62,7 @@ function initVectors(queryTokens, uninvertedList) {
     for (let i = 0; i < uninvertedList.length; i++) {
         vectors.push([]);
         let k = 0;
-        for (let j = 1; j < uninvertedList[i].length && k < queryTokens.length; j++) {
+        for (let j = 1; k < queryTokens.length; j++) {
             // console.log(queryTokens[k]);
             // console.log(uninvertedList[i][j].kmer[0]);
             if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
@@ -71,6 +71,7 @@ function initVectors(queryTokens, uninvertedList) {
                 k === queryTokens.length ? j = uninvertedList.length : j = 0;
             } else if (j === uninvertedList[i].length - 1) {
                 vectors[i].push({ token: queryTokens[k], tf: 0 });
+                j = 0
                 k++
             }
         }
