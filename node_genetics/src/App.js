@@ -150,6 +150,16 @@ class App extends Component {
         });
     }
 
+    cleardb() {
+        var client = new Client();
+        var args = {
+            headers: { "Content-Type": "application/json" },
+          };
+        client.post("http://localhost:4000/cleardb", args, function (data, response) {
+
+        });
+    }
+
     postSearchQuery(queryStr) {
         let results;
         var client = new Client();
@@ -364,7 +374,9 @@ class App extends Component {
                         <button className='buttn' id="mainBttn" onClick={ this.indexMain }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button>
                         <label style={{ paddingLeft: '40px' }} id="index-timer"></label>
                         <br/><br/><br/>
-                        <button className='buttn' id="postDataButton" onClick={ this.postData }>Post Index to Database</button>
+                        <button className='buttn' id="post-data-button" onClick={ this.postData }>Post Index to Database</button>
+                        <br/><br/><br/>
+                        <button className='buttn' id="clear-data-button" onClick={ this.cleardb }>Clear Database</button>
                         <br/><br/><br/>
                     </div>
 

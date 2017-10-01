@@ -9,7 +9,7 @@ var url = 'mongodb://localhost:27017/node_genetics';
 
 const server = express();
 const PORT = 4000;
-server.use('*', cors({ origin: 'http://node_genetics.traceywright.org' }));
+server.use('*', cors({ origin: 'http://node_genetics.traceywright.org/' }));
 
 server.use(bodyParser.json({limit: '100mb'}));
 server.use(bodyParser.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }));
@@ -57,6 +57,16 @@ server.post('/query', function(req, res, next) {
     });
 
     //res.sendStatus(200);
+})
+
+server.post('/cleardb', function(req, res, next) {
+    MongoClient.connect(url, function(err, db) { 
+        assert.equal(null, err);
+        let collection = db.collection('gene_indexes');
+        collection.remove({})
+        db.close(); 
+        res.sendStatus(200);
+    });
 })
 
 

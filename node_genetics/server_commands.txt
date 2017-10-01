@@ -1,12 +1,15 @@
-cd /home/ubuntu/Node_Molecular_Biology/node_genetics
-
-pm2 start npm --name "node_genetics" -- start
-
 pm2 stop node_genetics
-
-pm2 startOrRestart ecosystem.config.js // default command found in most tuts: doesn't work
+pm2 stop node_genetics_server
 
 pm2 delete node_genetics
+pm2 delete node_genetics_server
+
+cd /home/ubuntu/Node_Molecular_Biology/node_genetics
+pm2 start npm --name "node_genetics" -- start
+cd server
+pm2 start npm --name "node_genetics_server" -- start
+
+pm2 startOrRestart ecosystem.config.js // default command found in most tuts: doesn't work
 
 pm2 list 
 
