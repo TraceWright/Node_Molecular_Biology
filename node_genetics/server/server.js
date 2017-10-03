@@ -9,7 +9,7 @@ var url = 'mongodb://localhost:27017/node_genetics';
 
 const server = express();
 const PORT = 4000;
-server.use('*', cors({ origin: 'http://node_genetics.traceywright.org/' }));
+server.use('*', cors({ origin: 'http://node_genetics.traceywright.org' }));
 
 server.use(bodyParser.json({limit: '100mb'}));
 server.use(bodyParser.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }));
@@ -39,23 +39,25 @@ server.post('/index', function(req, res, next) {
 })
 
 
-server.post('/query', function(req, res, next) {
-    console.log(req.body);
-    
+server.post('/query', function(req, res, next) {    
     MongoClient.connect(url, function(err, db) { 
         assert.equal(null, err);
         let collection = db.collection('gene_indexes');
-        // collection.find({k: req.body.data},{_id: 0, k:1,d:1}).toArray(function(err, result) { 
-        collection.find({k: { $in: req.body.data }},{_id: 1, k:1, d:1}).toArray(function(err, result) {
+        collection.find({k: { $in: req.body.data }},{_id: 0, k:1, d:1}).toArray(function(err, result) {
             assert.equal(err, null);
             //assert.equal(1, result.length);
             console.log("Found the following records");
-            console.dir(result);
-            res.send(JSON.stringify(result));
-          });        
-        db.close(); 
+            console.log(result);
+            collection.findOne({'seqLen':{$ne:null}},{_id: 0, seqLen:1}, function(err, seqLen) {
+                // console.log(seqLen);
+                assert.equal(err, null);
+                result.push(seqLen);
+                // console.log(result);
+                res.send(JSON.stringify(result));
+                db.close(); 
+            });
+        });
     });
-
     //res.sendStatus(200);
 })
 

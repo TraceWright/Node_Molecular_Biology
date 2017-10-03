@@ -83,7 +83,7 @@ function rankResults(results) {
     endSearchTime();
     let uninvertedList = uninvertList(results);
 
-    let rankMethod = 0; // TODO: attach to ui select    
+    let rankMethod = 1; // TODO: attach to ui select    
     if (rankMethod === 0) {
         console.log(this.state.querySeq);
         let queryTokens = this.tokeniseQuery(this.state.querySeq);
@@ -96,6 +96,7 @@ function rankResults(results) {
             for (let j = 1; j < uninvertedList[i].length - 1; j++) {
                 let kmer = uninvertedList[i][j].kmer[0];            
                 let idf = calculateIDF(uninvertedList, kmer);
+                // normaliseTF();
                 let tfidf = calculateTFIDF(uninvertedList[i][j].kmer[1], idf);
                 uninvertedList[i][uninvertedList[i].length - 1].rank += tfidf;
             }
@@ -269,7 +270,7 @@ class App extends Component {
       time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
     }
       
-    createIndex(ra, i_main) {
+    createIndex(ra, i_main, sequenceLengths) {
         indexStopwatch.start();
         let queryLength = ra.length;
         let positionStart;
@@ -317,19 +318,31 @@ class App extends Component {
         let tokArray = tok.match(/.{1,7}/g);
         return tokArray;
     }
+
+    getSequenceLengths(sa) {
+        let sequenceLengths = [];
+        sa.forEach(function(element) {
+            sequenceLengths.push(element.length);  
+        });
+        return sequenceLengths;
+    }
         
     indexMain() {        
     document.getElementById('loader').style.display = 'grid';
       let sa;
       let indexTimes = { minutes: 0, seconds: 0 };
-      sa = this.state.sequences
+      sa = this.state.sequences;
+      let sequenceLengths = this.getSequenceLengths(sa);
       for (let i = 0; i < sa.length; i++) {
         let ta = this.tokeniseSequence(sa[i]);
         let ra = this.createRotations(ta);
-        let timer = this.createIndex(ra, i); // sets index in state and returns indexStopwatch result
+        let timer = this.createIndex(ra, i, sequenceLengths); // sets index in state and returns indexStopwatch result
         indexTimes.minutes += timer.minutes;
         indexTimes.seconds += timer.seconds;
-    }
+      }
+      let tempArray = this.state.indexes;
+      tempArray.push({ seqLen: sequenceLengths });
+      this.setState({ indexes: tempArray });      
       let indexTimer  = document.getElementById('index-timer');
       this.displayTimer(indexTimes, indexTimer);
       document.getElementById('loader').style.display = 'none'; 
