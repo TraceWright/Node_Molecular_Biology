@@ -32,8 +32,16 @@ function sortResults(sortingArray) {
     return sortedArray;
 }
 
+function calculateQueryTFIDF() {
+
+}
+
 function calculateTFIDF(tf, idf) {
     return tf * idf;
+}
+
+function normaliseTF(tf, seqLen) {
+    return tf / seqLen; // factorised tf / sequence length * number of rotations (tf / seqLen * 7 / 7)
 }
 
 function calculateIDF(uninvertedList, kmer) {
@@ -76,33 +84,45 @@ function initVectors(queryTokens, uninvertedList) {
             }
         }
     }
+    return vectors;
+}
+
+function getStats(uninvertedList, seqLen) {
+    for (let i = 0; i < uninvertedList.length; i++) {
+        uninvertedList[i].push({rank: 0});
+        for (let j = 1; j < uninvertedList[i].length - 1; j++) {
+            let kmer = uninvertedList[i][j].kmer[0];            
+            let idf = calculateIDF(uninvertedList, kmer);
+            let tf = uninvertedList[i][j].kmer[1];
+            let normTF = normaliseTF(tf, seqLen.seqLen[i]);
+            uninvertedList[i][j].kmer[1] = [tf, normTF];
+            let tfidf = calculateTFIDF(uninvertedList[i][j].kmer[1][1], idf);
+            uninvertedList[i][uninvertedList[i].length - 1].rank += tfidf;
+        }
+    }
+    return uninvertedList;
+}
+
+function calculateCosineSimilarity(uninvertedListWithStats) {
+    let dotProductVariables = 0;
+    let q = 1;
+    let cosSim = [];
+    for (let i = 0; i < uninvertedListWithStats.length; i++) {
+       console.log(uninvertedListWithStats[i][uninvertedListWithStats[i].length - 1].rank);
+       dotProductVariables += uninvertedListWithStats[i][uninvertedListWithStats[i].length - 1].rank * q;
+    }
+    console.log(dotProductVariables);
 }
 
 // workaround: 'this' was not available inside client
-function rankResults(results) {
+function rankResults(results, seqLen) {
     endSearchTime();
     let uninvertedList = uninvertList(results);
-
-    let rankMethod = 1; // TODO: attach to ui select    
-    if (rankMethod === 0) {
-        console.log(this.state.querySeq);
-        let queryTokens = this.tokeniseQuery(this.state.querySeq);
-        console.log(uninvertedList);
-        let vectors = initVectors(queryTokens, uninvertedList);
-        
-    } else {
-        for (let i = 0; i < uninvertedList.length; i++) {
-            uninvertedList[i].push({rank: 0});
-            for (let j = 1; j < uninvertedList[i].length - 1; j++) {
-                let kmer = uninvertedList[i][j].kmer[0];            
-                let idf = calculateIDF(uninvertedList, kmer);
-                // normaliseTF();
-                let tfidf = calculateTFIDF(uninvertedList[i][j].kmer[1], idf);
-                uninvertedList[i][uninvertedList[i].length - 1].rank += tfidf;
-            }
-        }
-    }
-    let sortedList = sortResults(uninvertedList);
+    let queryTokens = this.tokeniseQuery(this.state.querySeq);
+    let vectors = initVectors(queryTokens, uninvertedList);
+    let uninvertedListWithStats = getStats(uninvertedList, seqLen);
+    calculateCosineSimilarity(uninvertedListWithStats);
+    let sortedList = sortResults(uninvertedListWithStats);
     this.setState({sortedList: sortedList});
 }
 
@@ -207,7 +227,8 @@ class App extends Component {
         };
         client.post("http://localhost:4000/query", args, function (data, response) {
           results = JSON.parse(data.toString());
-          rankResults(results);
+          let seqLen = results.pop();
+          rankResults(results, seqLen);
           uninvertList(results);
         });     
     }

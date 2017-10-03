@@ -2,6 +2,7 @@ import React from 'react';
 
 const Kmers = ({result}) => {
     result.kmer.pop();
+    result.kmer[1].pop();
     let b = 0;
     const k = result.kmer.map((km) => {
         b++
