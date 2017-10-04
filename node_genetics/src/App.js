@@ -19,7 +19,6 @@ function initElement(elem) {
 };
 
 function sortResults(sortingArray) {
-    console.log(sortingArray)
     let sortedArray = sortingArray.sort((a, b) => {     
         if (a[a.length - 1].cosSim > b[b.length - 1].cosSim) {
             return -1;
@@ -62,8 +61,6 @@ function initVectors(queryTokens, uninvertedList) {
         vectors.push([]);
         let k = 0;
         for (let j = 1; k < queryTokens.length; j++) {
-            // console.log(queryTokens[k]);
-            // console.log(uninvertedList[i][j].kmer[0]);
             if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
                 vectors[i].push({ kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1] });
                 k++
@@ -83,7 +80,6 @@ function getStats(vectors, seqLen) {
         vectors[i].push({cosSim: 0});
         for (let j = 0; j < vectors[i].length - 1; j++) {
             let idf = calculateIDF(vectors, vectors[i][j]);
-            console.log('idf: ' + idf);
             let tf = vectors[i][j].tf;
             let normTF = normaliseTF(tf, seqLen.seqLen[i]);
             vectors[i][j].tf = [tf, normTF];
@@ -102,7 +98,6 @@ function calculateCosineSimilarity(vectorsWithStats) {
         let documentSquares = 0;
         let querySquares = 0;
         for (let j = 0; j < vectorsWithStats[i].length - 1; j++) {
-            console.log(vectorsWithStats[i][j].tfidf);
             dotProduct += vectorsWithStats[i][j].tfidf * queryTfidf;
             documentSquares += Math.pow(vectorsWithStats[i][j].tfidf, 2);
             querySquares += Math.pow(queryTfidf, 2);
@@ -270,7 +265,6 @@ class App extends Component {
     }
 
     postData() {
-        console.log(this.state.indexes)
         let jsonIndex = JSON.stringify(this.state.indexes)
         var client = new Client();
         var args = {
@@ -279,9 +273,6 @@ class App extends Component {
           body: this.state.index
         };  
         client.post("http://localhost:4000/index", args, function (data, response) {
-          // parsed response body as js object 
-          console.log("hello");
-          // raw response 
           console.log(response);
         }); 
       }
