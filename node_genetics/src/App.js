@@ -21,19 +21,15 @@ function initElement(elem) {
 function sortResults(sortingArray) {
     console.log(sortingArray)
     let sortedArray = sortingArray.sort((a, b) => {     
-        if (a[a.length - 1].rank > b[b.length - 1].rank) {
+        if (a[a.length - 1].cosSim > b[b.length - 1].cosSim) {
             return -1;
           }
-        if (a[a.length - 1].rank < b[b.length - 1].rank) {
+        if (a[a.length - 1].cosSim < b[b.length - 1].cosSim) {
           return 1;
         }
         return 0;
     });
     return sortedArray;
-}
-
-function calculateQueryTFIDF() {
-
 }
 
 function calculateTFIDF(tf, idf) {
@@ -44,19 +40,14 @@ function normaliseTF(tf, seqLen) {
     return tf / seqLen; // factorised tf / sequence length * number of rotations (tf / seqLen * 7 / 7)
 }
 
-function calculateIDF(uninvertedList, kmer) {
-    let n = uninvertedList.reduce(function(accumulator, currentValue) {
-        let testArray = [];
-        for (let i = 1; i < currentValue.length - 1; i++) {
-            testArray.push(currentValue[i].kmer[0]);}
-        let exists = testArray.indexOf(kmer);
-        // exists >= 0 ? inDocument = accumulator + 1 : inDocument = accumulator;
-        // return inDocument;
-
-        let inDocument = exists >=0 ? accumulator + 1 : accumulator;
-        return inDocument;
-    },0)
-    return Math.log10((uninvertedList.length / n) + 1);
+function calculateIDF(vectors, kmer) {
+    let n = 0;
+    vectors.forEach(function(element) {
+        for (let i = 0; i < element.length - 1; i++) {
+            element[i].kmer === kmer.kmer ? n++ : null;
+        };
+    });
+    return Math.log10((vectors.length / n) + 1);
 }
 
 function endSearchTime() {
@@ -74,11 +65,11 @@ function initVectors(queryTokens, uninvertedList) {
             // console.log(queryTokens[k]);
             // console.log(uninvertedList[i][j].kmer[0]);
             if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
-                vectors[i].push({ token: queryTokens[k], tf: uninvertedList[i][j].kmer[1] });
+                vectors[i].push({ kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1] });
                 k++
                 k === queryTokens.length ? j = uninvertedList.length : j = 0;
             } else if (j === uninvertedList[i].length - 1) {
-                vectors[i].push({ token: queryTokens[k], tf: 0 });
+                vectors[i].push({ kmer: queryTokens[k], tf: 0, tfidf: 0 });
                 j = 0
                 k++
             }
@@ -87,31 +78,38 @@ function initVectors(queryTokens, uninvertedList) {
     return vectors;
 }
 
-function getStats(uninvertedList, seqLen) {
-    for (let i = 0; i < uninvertedList.length; i++) {
-        uninvertedList[i].push({rank: 0});
-        for (let j = 1; j < uninvertedList[i].length - 1; j++) {
-            let kmer = uninvertedList[i][j].kmer[0];            
-            let idf = calculateIDF(uninvertedList, kmer);
-            let tf = uninvertedList[i][j].kmer[1];
+function getStats(vectors, seqLen) {
+    for (let i = 0; i < vectors.length; i++) {
+        vectors[i].push({cosSim: 0});
+        for (let j = 0; j < vectors[i].length - 1; j++) {
+            let idf = calculateIDF(vectors, vectors[i][j]);
+            console.log('idf: ' + idf);
+            let tf = vectors[i][j].tf;
             let normTF = normaliseTF(tf, seqLen.seqLen[i]);
-            uninvertedList[i][j].kmer[1] = [tf, normTF];
-            let tfidf = calculateTFIDF(uninvertedList[i][j].kmer[1][1], idf);
-            uninvertedList[i][uninvertedList[i].length - 1].rank += tfidf;
+            vectors[i][j].tf = [tf, normTF];
+            let tfidf = calculateTFIDF(vectors[i][j].tf[1], idf);
+            vectors[i][j].tfidf = tfidf;
         }
     }
-    return uninvertedList;
+    return vectors;
 }
 
-function calculateCosineSimilarity(uninvertedListWithStats) {
-    let dotProductVariables = 0;
-    let q = 1;
-    let cosSim = [];
-    for (let i = 0; i < uninvertedListWithStats.length; i++) {
-       console.log(uninvertedListWithStats[i][uninvertedListWithStats[i].length - 1].rank);
-       dotProductVariables += uninvertedListWithStats[i][uninvertedListWithStats[i].length - 1].rank * q;
+function calculateCosineSimilarity(vectorsWithStats) {
+    const queryTfidf = 1;
+    for (let i = 0; i < vectorsWithStats.length; i++) {
+        let documentTfidf = [];
+        let dotProduct = 0;
+        let documentSquares = 0;
+        let querySquares = 0;
+        for (let j = 0; j < vectorsWithStats[i].length - 1; j++) {
+            console.log(vectorsWithStats[i][j].tfidf);
+            dotProduct += vectorsWithStats[i][j].tfidf * queryTfidf;
+            documentSquares += Math.pow(vectorsWithStats[i][j].tfidf, 2);
+            querySquares += Math.pow(queryTfidf, 2);
+        }
+        vectorsWithStats[i][vectorsWithStats[i].length - 1].cosSim = dotProduct / (Math.sqrt(documentSquares) * Math.sqrt(querySquares));
     }
-    console.log(dotProductVariables);
+    return vectorsWithStats;
 }
 
 // workaround: 'this' was not available inside client
@@ -120,9 +118,10 @@ function rankResults(results, seqLen) {
     let uninvertedList = uninvertList(results);
     let queryTokens = this.tokeniseQuery(this.state.querySeq);
     let vectors = initVectors(queryTokens, uninvertedList);
-    let uninvertedListWithStats = getStats(uninvertedList, seqLen);
-    calculateCosineSimilarity(uninvertedListWithStats);
-    let sortedList = sortResults(uninvertedListWithStats);
+    let vectorsWithStats = getStats(vectors, seqLen);
+    let vectorsWithCosSim = calculateCosineSimilarity(vectorsWithStats);
+    console.log(vectorsWithCosSim);
+    let sortedList = sortResults(vectorsWithCosSim);
     this.setState({sortedList: sortedList});
 }
 
