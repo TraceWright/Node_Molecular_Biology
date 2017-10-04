@@ -148,23 +148,41 @@ function uninvertList(results) {
 }
 
 window.onload = function() {
-    let fileInput = document.getElementById('fileInput');
-    let fileContents = document.getElementById('file-contents');
-    let notSupported = document.getElementById('not-supported');
+    let seqInput = document.getElementById('seq-input');
+    let annInput = document.getElementById('ann-input');
+    let fileContentsSeq = document.getElementById('file-contents-seq');
+    let fileContentsAnn = document.getElementById('file-contents-ann');
+    let notSupportedSeq = document.getElementById('not-supported-seq');
+    let notSupportedAnn = document.getElementById('not-supported-ann');
     
-    fileInput.addEventListener('change', function(e) {
-        var file = fileInput.files[0];
+    seqInput.addEventListener('change', function(e) {
+        var file = seqInput.files[0];
         var textType = /text.*/;
         if (file.type.match(textType)) {
             var reader = new FileReader();
             reader.onload = function(e) {
-              fileContents.value = reader.result;
+              fileContentsSeq.value = reader.result;
             }
             reader.readAsText(file);
         } else {
-            notSupported.innerText = "File not supported!"
+            notSupportedSeq.innerText = "File not supported!"
         }
     });
+
+    annInput.addEventListener('change', function(e) {
+        var file = annInput.files[0];
+        var textType = /text.*/;
+        if (file.type.match(textType)) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+              fileContentsAnn.value = reader.result;
+            }
+            reader.readAsText(file);
+        } else {
+            notSupportedAnn.innerText = "File not supported!"
+        }
+    });
+
 }
 
 
@@ -251,7 +269,7 @@ class App extends Component {
         let seqInput = document.getElementById('queryInput').value;
         document.getElementById('queryInput').style.display = 'none'; 
         document.getElementById('querySeq').style.display = 'block'; 
-        document.getElementById('submitButton').style.display = 'none';
+        document.getElementById('submit-button').style.display = 'none';
         document.getElementById('new-query-button').style.display = 'grid'; 
         document.getElementById('results-list').style.display = 'grid';    
         return seqInput;                        
@@ -362,14 +380,14 @@ class App extends Component {
     newQuery() {
         document.getElementById('queryInput').style.display = 'grid'; 
         document.getElementById('querySeq').style.display = 'none'; 
-        document.getElementById('submitButton').style.display = 'grid';
+        document.getElementById('submit-button').style.display = 'grid';
         document.getElementById('new-query-button').style.display = 'none';
         document.getElementById('search-timer').style.display = 'none';
         document.getElementById('results-list').style.display = 'none';                    
     }
 
     saveSequence() {
-        let fileContents = document.getElementById('file-contents').value;
+        let fileContents = document.getElementById('file-contents-seq').value;
         this.setState({ sequences: [...this.state.sequences, fileContents] });
     }
 
@@ -396,24 +414,32 @@ class App extends Component {
                   <button className='buttn' id="back-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px', display: 'none' }} onClick={ this.back }>Back</button>
                 </div>
 
-                <div id="file-uploads" style={{ paddingTop: '80px', paddingLeft: '50px', textAlign: 'left', display: 'none' }}> 
-                    <div className="input-files">
-                        <input type="file" id="fileInput" className='buttn'/>
-                    </div> 
-
-                    <div style={{ float: 'left', paddingLeft: '50px' }} className="uploaded-sequence" id="uploaded-sequence">
-                        <br/><br/>    
-                        <label style={{ textAlign: 'left' }}>File Contents:</label>
-                        <br/><br/>
-                        <label id="not-supported"/>
-                        <br/>
-                        <textarea name="sequence" value={ this.state.sequence } onChange={ this.handleChange } id="file-contents" style={{height: '500px', float: 'left', textAlign: 'left', width: '600px', wordBreak: 'break-all', wordWrap: 'break-word'}}></textarea>
-                        <br/>
+                <div className="file-uploads" id="file-uploads" style={{ paddingTop: '80px', paddingLeft: '50px', textAlign: 'left', display: 'none' }}> 
+                        <div className="seq-up" style={{ float: 'left', paddingLeft: '50px' }} className="uploaded-sequence" id="uploaded-sequence">
+                            <input style={{ height: '30px', width: '300px' }} placeholder="Organism name"></input>
+                            <br/><br/>
+                            <textarea className="text-area" placeholder="Copy/Paste sequence or upload a text file" name="sequence" value={ this.state.sequence } onChange={ this.handleChange } id="file-contents-seq"></textarea>
+                            <br/>
+                        <div id="input-files">
+                            <input style={{ marginTop: '20px', float: 'left' }} type="file" id="seq-input" className='buttn'/>
+                            <br/><br/>
+                            <label id="not-supported-seq"/>
+                        </div> 
                     </div>
 
-                    <div>
-                    <button onClick={ this.saveSequence } style={{ marginTop: '20px', float: 'left', marginLeft: '50px' }} className='buttn'>Submit</button>
+                    <div className="annotations-up">
+                        <textarea className="text-area" placeholder="Copy/Paste annotations or upload a text file" name="annotations" style={{ marginTop: '50px' }} value={ this.state.sequence } onChange={ this.handleChange } id="file-contents-ann"></textarea>
+                        <div id="input-annotations">
+                            <input style={{ marginTop: '20px', float: 'left' }} type="file" id="ann-input" className='buttn'/>
+                            <br/><br/>
+                            <label id="not-supported-ann"/>
+                        </div> 
                     </div>
+
+                    <div id="submit">
+                        <button onClick={ this.saveSequence } style={{ marginTop: '20px', marginLeft: '50px' }} className='buttn'>Submit</button>
+                    </div>
+
                 </div>
 
                 <div className="indexing-querying" id="indexing-querying"> 
@@ -434,7 +460,7 @@ class App extends Component {
                         <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word', display: 'none'}}>{ this.state.querySeq }</label>
                         <br/><br/><br/>
                         <button className="buttn" id="new-query-button" style={{float: 'right', marginTop: '20px', display: 'none'}} onClick={this.newQuery}>New Query</button>
-                        <button className="buttn" id="submitButton" style={{float: 'left', marginTop: '20px'}} onClick={this.searchMain}>Submit Query</button>
+                        <button className="buttn" id="submit-button" style={{float: 'left', marginTop: '20px'}} onClick={this.searchMain}>Submit Query</button>
                         <div id="search-timer" style={{ display: 'none' }}>
                             <SearchTimer timer={ this.state.searchTime } />  
                         </div>                  

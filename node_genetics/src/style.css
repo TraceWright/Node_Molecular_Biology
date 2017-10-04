@@ -7,54 +7,84 @@
     background-position: cover;
   }
 
-  .buttn {
-    background: transparent;
-    height: 36px;
-    font-weight: bold;
-    font-size: 16px;
-    color: #555555;
-  }
+.seq-up {
+    grid-area: sequp;
+}
 
-  .line {
-    height: 1px;
-    width: 150px;
-    border: none;
-    text-align: center;    
+.annotations-up {
+    grid-area: ann;
+}
+
+.submit {
+    grid-area: submit;
+}
+
+.file-uploads {
+    display: grid;
+    grid-gap: 10px;
+    margin: auto;
+    width: 1500px;
+    grid-template-columns: 50% 50%;
+    grid-template-areas:
+    'sequp ann'
+    'submit submit'
+}
+
+.buttn {
+  background: transparent;
+  height: 36px;
+  font-weight: bold;
+  font-size: 16px;
+  color: #555555;
+}
+
+.line {
+  height: 1px;
+  width: 150px;
+  border: none;
+  text-align: center;    
 }
   
-  .indexing {
-    grid-area: indx;
-  }
+.indexing {
+  grid-area: indx;
+}
 
-  .querying {
-    grid-area: qury;
-  }
+.querying {
+  grid-area: qury;
+}
 
-  .indexing-querying {
-    display: grid;  
-    grid-gap: 10px;
-    width: 1200px;
-    margin: auto;
-    padding-top: 120px;
-    text-align: left;
-    padding-left: 100px;
-    grid-template-columns: 10% 10% 10% 10% 10% 10% 10% 10%;
-    grid-template-areas:
-    'indx indx indx indx indx qury qury qury'
-  }
+.indexing-querying {
+  display: grid;  
+  grid-gap: 10px;
+  width: 1200px;
+  margin: auto;
+  padding-top: 120px;
+  text-align: left;
+  padding-left: 100px;
+  grid-template-columns: 10% 10% 10% 10% 10% 10% 10% 10%;
+  grid-template-areas:
+  'indx indx indx indx indx qury qury qury'
+}
 
-  .loader {
-    border: 3px solid #f3f3f3; /* Light grey */
-    border-top: 3px solid #3497DB; /* Blue */
-    border-radius: 50%;
-    width: 18px;
-    height: 18px;
-    animation: spin 2s linear infinite;
-  }
+.loader {
+  border: 3px solid #f3f3f3; /* Light grey */
+  border-top: 3px solid #3497DB; /* Blue */
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  animation: spin 2s linear infinite;
+}
   
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
-
+.text-area {
+  height: 600px; 
+  float: left; 
+  text-align: left; 
+  width: 500px; 
+  word-break: break-all; 
+  word-wrap: break-word;
+}
