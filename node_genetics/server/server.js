@@ -14,6 +14,26 @@ server.use('*', cors({ origin: 'http://localhost:3000' }));
 server.use(bodyParser.json({limit: '100mb'}));
 server.use(bodyParser.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }));
 
+server.post('/annotations', function(req, res, next) {
+    
+    let data = JSON.parse(req.body.data);
+    console.log('data');
+    console.log(data);
+
+    MongoClient.connect(url, function(err, db) {
+        assert.equal(null, err);
+        console.log("Connected correctly to server");
+        let collection = db.collection('annotations');
+        //db.<collection(like a table)>('<tableName>');
+        collection.insertMany(data, function(err, result) {
+            assert.equal(err, null);
+            console.log("Updated the document");
+            db.close();
+            res.sendStatus(200);
+          });  
+    });
+});
+
 server.post('/index', function(req, res, next) {
     
     let data = JSON.parse(req.body.data);
@@ -36,7 +56,7 @@ server.post('/index', function(req, res, next) {
    // db.gene_indexes.find({k: "AAAATT"})
 
     // res.sendStatus(200);
-})
+});
 
 
 server.post('/query', function(req, res, next) {    
@@ -59,17 +79,19 @@ server.post('/query', function(req, res, next) {
         });
     });
     //res.sendStatus(200);
-})
+});
 
 server.post('/cleardb', function(req, res, next) {
     MongoClient.connect(url, function(err, db) { 
         assert.equal(null, err);
         let collection = db.collection('gene_indexes');
-        collection.remove({})
+        let annotation = db.collection('annotations')
+        collection.remove({});
+        annotation.remove({});
         db.close(); 
         res.sendStatus(200);
     });
-})
+});
 
 
 // const pgPool = new Pool({

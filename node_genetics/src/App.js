@@ -195,6 +195,7 @@ class App extends Component {
             sequences: [],
             annotation: [],
             annotations: [],
+            annotationsProcessed: [],
             querySeq: [],
             indexes: [], 
             searchTimeStart: 0,
@@ -204,6 +205,7 @@ class App extends Component {
 
         endSearchTime = endSearchTime.bind(this);
         rankResults = rankResults.bind(this); 
+        this.processAnnotations = this.processAnnotations.bind(this);
         this.searchIndex = this.searchIndex.bind(this);        
         this.submitSequence = this.submitSequence.bind(this);
         this.searchMain = this.searchMain.bind(this);        
@@ -220,6 +222,20 @@ class App extends Component {
         this.setState({
             [target.name]: target.value
         });
+    }
+
+    postAnnotations(geneProducts) {
+        console.log(geneProducts);
+        let jsonAnnotations = JSON.stringify(geneProducts);
+        var client = new Client();
+        var args = {
+            data: { data: jsonAnnotations },
+            headers: { "Content-Type": "application/json" },
+            //body: jsonAnnotations
+          };
+        client.post("http://localhost:4000/annotations", args, function (data, response) {
+            console.log(response);
+        }); 
     }
 
     cleardb() {
@@ -358,48 +374,53 @@ class App extends Component {
         return sequenceLengths;
     }
 
-    proccessRegex(regex, input)
-    {
+    proccessRegex(regex, input) {
         let matches, output = [];
         while (matches = regex.exec(input)) {
-            if (matches.length > 2)
+            if (matches.length > 4)
             {
-                output.push([matches[1], matches[2]]);
+                let whitespaceRemoved = matches[4].split('\n').map(Function.prototype.call, String.prototype.trim).join(' ');
+                output.push({ strand: matches[1], sPos: matches[2], ePos: matches[3], product: whitespaceRemoved });
             }
             else
             {
-                output.push(matches[1]);
+                let whitespaceRemoved = matches[1].split('\n').map(Function.prototype.call, String.prototype.trim).join(' ');
+                output.push(whitespaceRemoved);
             }
         }
         return output;
     }
 
     processAnnotations(annotations) {
-
-        let organism = this.proccessRegex(/organism=\"(.*)\"/gi, annotations[0]);
-        let complementGene = this.proccessRegex(/gene\s*complement\((\d*)[.]*(\d*)\)/gi, annotations[0]);
+        let organism = this.proccessRegex(/organism=\"(.+)\"/gi, annotations[0]);
+        // let complementGene = this.proccessRegex(/gene\s+complement\((\d+)[.]+(\d+)\)/gi, annotations[0]);
+        // let gene = this.proccessRegex(/gene\s+(\d+)[.]+(\d+)/gi, annotations[0]);
+        // let product = this.proccessRegex(/product=\"(.+?[\n]?.+?)\"/gi, annotations[0]);
+        let genesProducts = this.proccessRegex(/gene\s+((?:complement)?)\(?(\d+)\.+(\d+)\)?(?:\s|\S)*?product=\"(.+?[\n]?.+?)\"/gi, annotations[0]);
+        return genesProducts;
     }
         
     indexMain() {
-        this.processAnnotations(this.state.annotations);
-    document.getElementById('loader').style.display = 'grid';
-      let sa;
-      let indexTimes = { minutes: 0, seconds: 0 };
-      sa = this.state.sequences;
-      let sequenceLengths = this.getSequenceLengths(sa);
-      for (let i = 0; i < sa.length; i++) {
-        let ta = this.tokeniseSequence(sa[i]);
-        let ra = this.createRotations(ta);
-        let timer = this.createIndex(ra, i, sequenceLengths); // sets index in state and returns indexStopwatch result
-        indexTimes.minutes += timer.minutes;
-        indexTimes.seconds += timer.seconds;
-      }
-      let tempArray = this.state.indexes;
-      tempArray.push({ seqLen: sequenceLengths });
-      this.setState({ indexes: tempArray });      
-      let indexTimer  = document.getElementById('index-timer');
-      this.displayTimer(indexTimes, indexTimer);
-      document.getElementById('loader').style.display = 'none'; 
+        let geneProducts = this.processAnnotations(this.state.annotations);
+        this.postAnnotations(geneProducts);
+        document.getElementById('loader').style.display = 'grid';
+        let sa;
+        let indexTimes = { minutes: 0, seconds: 0 };
+        sa = this.state.sequences;
+        let sequenceLengths = this.getSequenceLengths(sa);
+        for (let i = 0; i < sa.length; i++) {
+          let ta = this.tokeniseSequence(sa[i]);
+          let ra = this.createRotations(ta);
+          let timer = this.createIndex(ra, i, sequenceLengths); // sets index in state and returns indexStopwatch result
+          indexTimes.minutes += timer.minutes;
+          indexTimes.seconds += timer.seconds;
+        }
+        let tempArray = this.state.indexes;
+        tempArray.push({ seqLen: sequenceLengths });
+        this.setState({ indexes: tempArray });      
+        let indexTimer  = document.getElementById('index-timer');
+        this.displayTimer(indexTimes, indexTimer);
+        document.getElementById('loader').style.display = 'none'; 
     }
 
     newQuery() {
