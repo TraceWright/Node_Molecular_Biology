@@ -193,6 +193,8 @@ class App extends Component {
         this.state = {
             sequence: [],
             sequences: [],
+            annotation: [],
+            annotations: [],
             querySeq: [],
             indexes: [], 
             searchTimeStart: 0,
@@ -355,8 +357,31 @@ class App extends Component {
         });
         return sequenceLengths;
     }
+
+    proccessRegex(regex, input)
+    {
+        let matches, output = [];
+        while (matches = regex.exec(input)) {
+            if (matches.length > 2)
+            {
+                output.push([matches[1], matches[2]]);
+            }
+            else
+            {
+                output.push(matches[1]);
+            }
+        }
+        return output;
+    }
+
+    processAnnotations(annotations) {
+
+        let organism = this.proccessRegex(/organism=\"(.*)\"/gi, annotations[0]);
+        let complementGene = this.proccessRegex(/gene\s*complement\((\d*)[.]*(\d*)\)/gi, annotations[0]);
+    }
         
-    indexMain() {        
+    indexMain() {
+        this.processAnnotations(this.state.annotations);
     document.getElementById('loader').style.display = 'grid';
       let sa;
       let indexTimes = { minutes: 0, seconds: 0 };
@@ -387,8 +412,10 @@ class App extends Component {
     }
 
     saveSequence() {
-        let fileContents = document.getElementById('file-contents-seq').value;
-        this.setState({ sequences: [...this.state.sequences, fileContents] });
+        let fileContentsSeq = document.getElementById('file-contents-seq').value;
+        let fileContentsAnn = document.getElementById('file-contents-ann').value;
+        this.setState({ sequences: [...this.state.sequences, fileContentsSeq] });
+        this.setState({ annotations: [...this.state.annotations, fileContentsAnn]})
     }
 
     uploadFilesPage() {
@@ -428,7 +455,7 @@ class App extends Component {
                     </div>
 
                     <div className="annotations-up">
-                        <textarea className="text-area" placeholder="Copy/Paste annotations or upload a text file" name="annotations" style={{ marginTop: '50px' }} value={ this.state.sequence } onChange={ this.handleChange } id="file-contents-ann"></textarea>
+                        <textarea className="text-area" placeholder="Copy/Paste annotations or upload a text file" name="annotation" style={{ marginTop: '50px' }} value={ this.state.annotation } onChange={ this.handleChange } id="file-contents-ann"></textarea>
                         <div id="input-annotations">
                             <input style={{ marginTop: '20px', float: 'left' }} type="file" id="ann-input" className='buttn'/>
                             <br/><br/>
