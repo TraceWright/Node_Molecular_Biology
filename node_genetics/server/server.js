@@ -14,6 +14,29 @@ server.use('*', cors({ origin: 'http://localhost:3000' }));
 server.use(bodyParser.json({limit: '100mb'}));
 server.use(bodyParser.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }));
 
+
+server.post('/vectors', function(req, res, next) {
+    let data = JSON.parse(req.body.data);
+    console.log(data);
+    console.log('organism');
+    console.log(data[0]);
+
+    MongoClient.connect(url, function(err, db) {
+        assert.equal(null, err);
+        console.log("Connected correctly to server");
+        let collection = db.collection('annotations');
+        //db.<collection(like a table)>('<tableName>');
+        collection.find({organism: { $in: req.body.data.organism }},{_id: 0, k:1, d:1}).toArray(function(err, result) {
+            assert.equal(err, null);
+            console.log("Found the following records");
+            console.log(result);
+            db.close();
+            res.sendStatus(200);
+          });  
+    });
+});
+
+
 server.post('/annotations', function(req, res, next) {
     
     let data = JSON.parse(req.body.data);
@@ -65,16 +88,17 @@ server.post('/query', function(req, res, next) {
         let collection = db.collection('gene_indexes');
         collection.find({k: { $in: req.body.data }},{_id: 0, k:1, d:1}).toArray(function(err, result) {
             assert.equal(err, null);
-            //assert.equal(1, result.length);
             console.log("Found the following records");
             console.log(result);
             collection.findOne({'seqLen':{$ne:null}},{_id: 0, seqLen:1}, function(err, seqLen) {
-                // console.log(seqLen);
                 assert.equal(err, null);
                 result.push(seqLen);
-                // console.log(result);
-                res.send(JSON.stringify(result));
-                db.close(); 
+                collection.findOne({'organisms': {$ne:null}},{_id: 0, organisms:1}, function(err, org) {
+                    assert.equal(err, null);
+                    result.push(org);
+                    res.send(JSON.stringify(result));
+                    db.close();
+                }); 
             });
         });
     });

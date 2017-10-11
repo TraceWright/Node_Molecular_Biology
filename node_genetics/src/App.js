@@ -6,7 +6,6 @@ let Stopwatch = require("node-stopwatch").Stopwatch;
 let Client = require('node-rest-client').Client;
 
 let indexStopwatch = Stopwatch.create();
-// let searchStopwatch = Stopwatch.create();
 
 function matchesKmer(element, index, array){
     if (element.k === this) {
@@ -55,14 +54,14 @@ function endSearchTime() {
     this.setState({ searchTime:  searchTimeEnd - this.state.searchTimeStart});
 }
 
-function initVectors(queryTokens, uninvertedList) {
+function initVectors(queryTokens, uninvertedList, organisms) {
     let vectors = [];
     for (let i = 0; i < uninvertedList.length; i++) {
         vectors.push([]);
         let k = 0;
         for (let j = 1; k < queryTokens.length; j++) {
             if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
-                vectors[i].push({ kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1] });
+                vectors[i].push({ organism: organisms.organisms[i], kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1], pos: uninvertedList[i][j].kmer[2] });
                 k++
                 k === queryTokens.length ? j = uninvertedList.length : j = 0;
             } else if (j === uninvertedList[i].length - 1) {
@@ -93,7 +92,6 @@ function getStats(vectors, seqLen) {
 function calculateCosineSimilarity(vectorsWithStats) {
     const queryTfidf = 1;
     for (let i = 0; i < vectorsWithStats.length; i++) {
-        let documentTfidf = [];
         let dotProduct = 0;
         let documentSquares = 0;
         let querySquares = 0;
@@ -107,14 +105,32 @@ function calculateCosineSimilarity(vectorsWithStats) {
     return vectorsWithStats;
 }
 
+function postVectors(vectors) {
+    console.log(vectors);
+    let v = JSON.stringify(vectors);
+    var client = new Client();
+    var args = {
+        data: { data: v },
+        headers: { "Content-Type": "application/json" },
+      };
+    client.post("http://localhost:4000/vectors", args, function (data, response) {
+        console.log(response);
+    }); 
+}
+
+function matchProductsToPositions(vectors) {
+    postVectors(vectors);
+}
+
 // workaround: 'this' was not available inside client
-function rankResults(results, seqLen) {
+function rankResults(results, seqLen, organisms) {
     endSearchTime();
     let uninvertedList = uninvertList(results);
     let queryTokens = this.tokeniseQuery(this.state.querySeq);
-    let vectors = initVectors(queryTokens, uninvertedList);
+    let vectors = initVectors(queryTokens, uninvertedList, organisms);
     let vectorsWithStats = getStats(vectors, seqLen);
     let vectorsWithCosSim = calculateCosineSimilarity(vectorsWithStats);
+    let vectorsWithCosSimAnn = matchProductsToPositions(vectorsWithCosSim);
     console.log(vectorsWithCosSim);
     let sortedList = sortResults(vectorsWithCosSim);
     this.setState({sortedList: sortedList});
@@ -182,7 +198,6 @@ window.onload = function() {
             notSupportedAnn.innerText = "File not supported!"
         }
     });
-
 }
 
 
@@ -257,8 +272,9 @@ class App extends Component {
         };
         client.post("http://localhost:4000/query", args, function (data, response) {
           results = JSON.parse(data.toString());
+          let organisms = results.pop();
           let seqLen = results.pop();
-          rankResults(results, seqLen);
+          rankResults(results, seqLen, organisms);
           uninvertList(results);
         });     
     }
@@ -317,10 +333,12 @@ class App extends Component {
       time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
     }
       
-    createIndex(ra, i_main, sequenceLengths) {
+    createIndex(ra, i_main, sequenceLengths, organisms) {
+        console.log(organisms);
         indexStopwatch.start();
         let queryLength = ra.length;
         let positionStart;
+        console.log(this.state.annotations);
         let index = this.state.indexes;
         for (let j = 0; j < ra.length; j++) {
             for (let i = 0; i < ra[j].length; i++) {
@@ -335,6 +353,7 @@ class App extends Component {
                 }  
             }    
         }
+        index.push({ organisms: organisms });
         indexStopwatch.stop();
         let minutes = Math.floor(indexStopwatch.elapsed.minutes);
         let seconds = indexStopwatch.elapsed.seconds % 60; 
@@ -374,13 +393,13 @@ class App extends Component {
         return sequenceLengths;
     }
 
-    proccessRegex(regex, input) {
+    proccessRegex(regex, input, organism = false) {
         let matches, output = [];
         while (matches = regex.exec(input)) {
             if (matches.length > 4)
             {
                 let whitespaceRemoved = matches[4].split('\n').map(Function.prototype.call, String.prototype.trim).join(' ');
-                output.push({ strand: matches[1], sPos: matches[2], ePos: matches[3], product: whitespaceRemoved });
+                output.push({ strand: matches[1], sPos: parseInt(matches[2]), ePos: parseInt(matches[3]), product: whitespaceRemoved, organism: organism });
             }
             else
             {
@@ -392,17 +411,22 @@ class App extends Component {
     }
 
     processAnnotations(annotations) {
-        let organism = this.proccessRegex(/organism=\"(.+)\"/gi, annotations[0]);
-        // let complementGene = this.proccessRegex(/gene\s+complement\((\d+)[.]+(\d+)\)/gi, annotations[0]);
-        // let gene = this.proccessRegex(/gene\s+(\d+)[.]+(\d+)/gi, annotations[0]);
-        // let product = this.proccessRegex(/product=\"(.+?[\n]?.+?)\"/gi, annotations[0]);
-        let genesProducts = this.proccessRegex(/gene\s+((?:complement)?)\(?(\d+)\.+(\d+)\)?(?:\s|\S)*?product=\"(.+?[\n]?.+?)\"/gi, annotations[0]);
-        return genesProducts;
+        let genesProducts = []; 
+        let organisms = [];
+        for (let i = 0; i < annotations.length; i++) {
+            let organism = this.proccessRegex(/organism=\"(.+)\"/gi, annotations[0])[0];
+            organisms.push(organism);
+            // let complementGene = this.proccessRegex(/gene\s+complement\((\d+)[.]+(\d+)\)/gi, annotations[0]);
+            // let gene = this.proccessRegex(/gene\s+(\d+)[.]+(\d+)/gi, annotations[0]);
+            // let product = this.proccessRegex(/product=\"(.+?[\n]?.+?)\"/gi, annotations[0]);
+            genesProducts = genesProducts.concat(this.proccessRegex(/gene\s+((?:complement)?)\(?(\d+)\.+(\d+)\)?(?:\s|\S)*?product=\"(.+?[\n]?.+?)\"/gi, annotations[0], organism));
+        }
+        return { genesProducts, organisms };
     }
         
     indexMain() {
-        let geneProducts = this.processAnnotations(this.state.annotations);
-        this.postAnnotations(geneProducts);
+        let ant = this.processAnnotations(this.state.annotations);
+        this.postAnnotations(ant.genesProducts);
         document.getElementById('loader').style.display = 'grid';
         let sa;
         let indexTimes = { minutes: 0, seconds: 0 };
@@ -411,7 +435,7 @@ class App extends Component {
         for (let i = 0; i < sa.length; i++) {
           let ta = this.tokeniseSequence(sa[i]);
           let ra = this.createRotations(ta);
-          let timer = this.createIndex(ra, i, sequenceLengths); // sets index in state and returns indexStopwatch result
+          let timer = this.createIndex(ra, i, sequenceLengths, ant.organisms); // sets index in state and returns indexStopwatch result
           indexTimes.minutes += timer.minutes;
           indexTimes.seconds += timer.seconds;
         }
@@ -464,8 +488,6 @@ class App extends Component {
 
                 <div className="file-uploads" id="file-uploads" style={{ paddingTop: '80px', paddingLeft: '50px', textAlign: 'left', display: 'none' }}> 
                         <div className="seq-up" style={{ float: 'left', paddingLeft: '50px' }} className="uploaded-sequence" id="uploaded-sequence">
-                            <input style={{ height: '30px', width: '300px' }} placeholder="Organism name"></input>
-                            <br/><br/>
                             <textarea className="text-area" placeholder="Copy/Paste sequence or upload a text file" name="sequence" value={ this.state.sequence } onChange={ this.handleChange } id="file-contents-seq"></textarea>
                             <br/>
                         <div id="input-files">
@@ -476,7 +498,7 @@ class App extends Component {
                     </div>
 
                     <div className="annotations-up">
-                        <textarea className="text-area" placeholder="Copy/Paste annotations or upload a text file" name="annotation" style={{ marginTop: '50px' }} value={ this.state.annotation } onChange={ this.handleChange } id="file-contents-ann"></textarea>
+                        <textarea className="text-area" placeholder="Copy/Paste annotations or upload a text file" name="annotation" value={ this.state.annotation } onChange={ this.handleChange } id="file-contents-ann"></textarea>
                         <div id="input-annotations">
                             <input style={{ marginTop: '20px', float: 'left' }} type="file" id="ann-input" className='buttn'/>
                             <br/><br/>
@@ -487,7 +509,6 @@ class App extends Component {
                     <div id="submit">
                         <button onClick={ this.saveSequence } style={{ marginTop: '20px', marginLeft: '50px' }} className='buttn'>Submit</button>
                     </div>
-
                 </div>
 
                 <div className="indexing-querying" id="indexing-querying"> 
