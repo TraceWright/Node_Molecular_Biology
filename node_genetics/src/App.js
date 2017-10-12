@@ -105,8 +105,11 @@ function calculateCosineSimilarity(vectorsWithStats) {
     return vectorsWithStats;
 }
 
-function postVectors(vectors) {
-    console.log(vectors);
+function saveAnnotations(data) {
+    console.log(data);
+}
+
+function matchProductsToPositions(vectors) {
     let v = JSON.stringify(vectors);
     var client = new Client();
     var args = {
@@ -114,12 +117,8 @@ function postVectors(vectors) {
         headers: { "Content-Type": "application/json" },
       };
     client.post("http://localhost:4000/vectors", args, function (data, response) {
-        console.log(response);
+        saveAnnotations(data);
     }); 
-}
-
-function matchProductsToPositions(vectors) {
-    postVectors(vectors);
 }
 
 // workaround: 'this' was not available inside client
@@ -131,7 +130,6 @@ function rankResults(results, seqLen, organisms) {
     let vectorsWithStats = getStats(vectors, seqLen);
     let vectorsWithCosSim = calculateCosineSimilarity(vectorsWithStats);
     let vectorsWithCosSimAnn = matchProductsToPositions(vectorsWithCosSim);
-    console.log(vectorsWithCosSim);
     let sortedList = sortResults(vectorsWithCosSim);
     this.setState({sortedList: sortedList});
 }
@@ -215,7 +213,8 @@ class App extends Component {
             indexes: [], 
             searchTimeStart: 0,
             searchTime: 0,
-            sortedList: []
+            sortedList: [],
+            an: []
         }
 
         endSearchTime = endSearchTime.bind(this);
@@ -240,7 +239,6 @@ class App extends Component {
     }
 
     postAnnotations(geneProducts) {
-        console.log(geneProducts);
         let jsonAnnotations = JSON.stringify(geneProducts);
         var client = new Client();
         var args = {
@@ -334,11 +332,9 @@ class App extends Component {
     }
       
     createIndex(ra, i_main, sequenceLengths, organisms) {
-        console.log(organisms);
         indexStopwatch.start();
         let queryLength = ra.length;
         let positionStart;
-        console.log(this.state.annotations);
         let index = this.state.indexes;
         for (let j = 0; j < ra.length; j++) {
             for (let i = 0; i < ra[j].length; i++) {
@@ -414,12 +410,12 @@ class App extends Component {
         let genesProducts = []; 
         let organisms = [];
         for (let i = 0; i < annotations.length; i++) {
-            let organism = this.proccessRegex(/organism=\"(.+)\"/gi, annotations[0])[0];
+            let organism = this.proccessRegex(/organism=\"(.+)\"/gi, annotations[i])[0];
             organisms.push(organism);
             // let complementGene = this.proccessRegex(/gene\s+complement\((\d+)[.]+(\d+)\)/gi, annotations[0]);
             // let gene = this.proccessRegex(/gene\s+(\d+)[.]+(\d+)/gi, annotations[0]);
             // let product = this.proccessRegex(/product=\"(.+?[\n]?.+?)\"/gi, annotations[0]);
-            genesProducts = genesProducts.concat(this.proccessRegex(/gene\s+((?:complement)?)\(?(\d+)\.+(\d+)\)?(?:\s|\S)*?product=\"(.+?[\n]?.+?)\"/gi, annotations[0], organism));
+            genesProducts = genesProducts.concat(this.proccessRegex(/gene\s+((?:complement)?)\(?(\d+)\.+(\d+)\)?(?:\s|\S)*?product=\"(.+?[\n]?.+?)\"/gi, annotations[i], organism));
         }
         return { genesProducts, organisms };
     }

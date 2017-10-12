@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 //import { Pool } from 'pg';
 let bodyParser = require('body-parser');
+let semaphore = require('semaphore');
 
 var MongoClient = require('mongodb').MongoClient, assert = require('assert');
 // Connection URL 
@@ -14,28 +15,45 @@ server.use('*', cors({ origin: 'http://localhost:3000' }));
 server.use(bodyParser.json({limit: '100mb'}));
 server.use(bodyParser.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }));
 
-
 server.post('/vectors', function(req, res, next) {
-    let data = JSON.parse(req.body.data);
-    console.log(data);
-    console.log('organism');
-    console.log(data[0]);
-
-    MongoClient.connect(url, function(err, db) {
-        assert.equal(null, err);
-        console.log("Connected correctly to server");
+    MongoClient.connect(url).then(function(db) {
         let collection = db.collection('annotations');
-        //db.<collection(like a table)>('<tableName>');
-        collection.find({organism: { $in: req.body.data.organism }},{_id: 0, k:1, d:1}).toArray(function(err, result) {
-            assert.equal(err, null);
-            console.log("Found the following records");
-            console.log(result);
-            db.close();
-            res.sendStatus(200);
-          });  
-    });
-});
+        let data = JSON.parse(req.body.data);
+        let sem = semaphore(1);
 
+        for (let i = 0; i < data.length; i++) { 
+            for (let j = 0; j < data[i].length - 1; j++) {
+                if (data[i][j].tf[0] > 0) {
+                    for (let k = 0; k < data[i][j].pos.length; k++) {
+                        let pos = data[i][j].pos[k];
+                        sem.take(function() {
+                            collection.find({organism: data[i][j].organism, sPos: {$lt:pos}, ePos:{$gt:pos}},
+                                {_id:0, strand:1, strand:1, ePos:1, product:1, organism:1}).toArray(function(err, result) {
+                                if (result[0] === undefined) {
+                                    data[i][j].pos[k] = [pos, {}]
+                                }
+                                else {
+                                    data[i][j].pos[k] = [pos, result[0]]
+                                }
+                                sem.leave();
+                            });
+                        });
+                    }
+                }
+            }
+        }
+        let timeout = function() {
+            if(sem.available() == false) {
+                setTimeout(function() {
+                    timeout();
+                },50)
+            } else {
+                res.send(data);
+            }
+        };
+        timeout();
+    })
+});
 
 server.post('/annotations', function(req, res, next) {
     
@@ -75,10 +93,6 @@ server.post('/index', function(req, res, next) {
             res.sendStatus(200);
           });  
     });
-    
-   // db.gene_indexes.find({k: "AAAATT"})
-
-    // res.sendStatus(200);
 });
 
 
@@ -102,7 +116,6 @@ server.post('/query', function(req, res, next) {
             });
         });
     });
-    //res.sendStatus(200);
 });
 
 server.post('/cleardb', function(req, res, next) {

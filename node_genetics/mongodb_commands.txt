@@ -11,3 +11,5 @@ db.gene_indexes.find()
 db.gene_indexes.find({k: "AAAATT"})
 db.gene_indexes.find().count()
 db.gene_indexes.remove({})
+
+db.annotations.find({$and:[{organism:"Staphylococcus aureus subsp. aureus RN4220"}, {sPos: {$lt:18327}}, {ePos:{$gt:18327}}]})
