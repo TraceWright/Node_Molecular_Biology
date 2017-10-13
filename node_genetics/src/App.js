@@ -61,9 +61,6 @@ function initVectors(queryTokens, uninvertedList, organisms) {
         vectors.push([]);
         let k = 0;
         for (let j = 1; k < queryTokens.length; j++) {
-            // let isComplement; 
-            // console.log(uninvertedList[i].length / 2);
-            // j > (uninvertedList[i].length) / 2 ? isComplement = "complement": isComplement = "";
             if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
                 vectors[i].push({ organism: organisms.organisms[i], kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1], pos: uninvertedList[i][j].kmer[2], posComplement: uninvertedList[i][j].kmer[3] });
                 k++
@@ -109,8 +106,9 @@ function calculateCosineSimilarity(vectorsWithStats) {
     return vectorsWithStats;
 }
 
-function saveAnnotations(data) {
+function displayResults(data) {
     console.log(data);
+    this.setState({ results: data });
 }
 
 function matchProductsToPositions(vectors) {
@@ -121,7 +119,7 @@ function matchProductsToPositions(vectors) {
         headers: { "Content-Type": "application/json" },
       };
     client.post("http://localhost:4000/vectors", args, function (data, response) {
-        saveAnnotations(data);
+        displayResults(data);
     }); 
 }
 
@@ -133,9 +131,8 @@ function rankResults(results, seqLen, organisms) {
     let vectors = initVectors(queryTokens, uninvertedList, organisms);
     let vectorsWithStats = getStats(vectors, seqLen);
     let vectorsWithCosSim = calculateCosineSimilarity(vectorsWithStats);
-    let vectorsWithCosSimAnn = matchProductsToPositions(vectorsWithCosSim);
     let sortedList = sortResults(vectorsWithCosSim);
-    this.setState({sortedList: sortedList});
+    let vectorsWithCosSimAnn = matchProductsToPositions(sortedList);
 }
 
 // workaround: 'this' was not available inside client
@@ -152,8 +149,6 @@ function uninvertList(results) {
             let len = element.d.length;
 
             for (let j = 0; j < len / 2; j++) {
-                // let isComplement;
-                // j < (element.d.length) / 2 ? isComplement = "": isComplement = "complement";
                 for (let k = 0; k < len / 2; k++) {
                     if (uninvertedList[k][0] === element.d[j][0]) { // match document to new array element
                         initElement(uninvertedList[k]);
@@ -227,13 +222,14 @@ class App extends Component {
             indexes: [], 
             searchTimeStart: 0,
             searchTime: 0,
-            sortedList: [],
+            results: [],
             an: [],
             reverseComplement: []
         }
 
         endSearchTime = endSearchTime.bind(this);
         rankResults = rankResults.bind(this); 
+        displayResults = displayResults.bind(this);
         this.processAnnotations = this.processAnnotations.bind(this);
         this.searchIndex = this.searchIndex.bind(this);        
         this.submitSequence = this.submitSequence.bind(this);
@@ -515,7 +511,7 @@ class App extends Component {
                   <button className='buttn' id="back-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px', display: 'none' }} onClick={ this.back }>Back</button>
                 </div>
 
-                <div className="file-uploads" id="file-uploads" style={{ paddingTop: '80px', paddingLeft: '50px', textAlign: 'left', display: 'none' }}> 
+                <div className="file-uploads" id="file-uploads" style={{ paddingTop: '30px', paddingLeft: '50px', textAlign: 'left', display: 'none' }}> 
                         <div className="seq-up" style={{ float: 'left', paddingLeft: '50px' }} className="uploaded-sequence" id="uploaded-sequence">
                             <textarea className="text-area" placeholder="Copy/Paste sequence or upload a text file" name="sequence" value={ this.state.sequence } onChange={ this.handleChange } id="file-contents-seq"></textarea>
                             <br/>
@@ -556,14 +552,14 @@ class App extends Component {
                         <h2 className="heading">Querying</h2><br/><br/>
                         <textarea placeholder="Enter sequences with a length of 7 bases, separated by a space (eg. AATTCAG GCGCTTA AATTCAG)" type="text" id='queryInput' name="querySeq" onChange={ this.handleChange } value={ this.state.querySeq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
                         <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word', display: 'none'}}>{ this.state.querySeq }</label>
-                        <br/><br/><br/>
+                        <br/><br/><br/><br/><br/><br/>
                         <button className="buttn" id="new-query-button" style={{float: 'right', marginTop: '20px', display: 'none'}} onClick={this.newQuery}>New Query</button>
                         <button className="buttn" id="submit-button" style={{float: 'left', marginTop: '20px'}} onClick={this.searchMain}>Submit Query</button>
                         <div id="search-timer" style={{ display: 'none' }}>
                             <SearchTimer timer={ this.state.searchTime } />  
                         </div>                  
                         <div id="results-list" style={{paddingTop: '100px'}}>
-                            <ResultList results={ this.state.sortedList } />
+                            <ResultList results={ this.state.results } />
                         </div>
                     </div>
 

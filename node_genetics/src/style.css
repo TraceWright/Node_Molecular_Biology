@@ -63,7 +63,7 @@
   padding-left: 100px;
   grid-template-columns: 10% 10% 10% 10% 10% 10% 10% 10%;
   grid-template-areas:
-  'indx indx indx indx indx qury qury qury'
+  'indx indx indx qury qury qury qury qury'
 }
 
 .loader {
