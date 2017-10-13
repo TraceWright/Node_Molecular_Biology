@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import './style.css';
 import ResultList from './components/resultList';
-import SearchTimer from './components/searchTimer'
+import SearchTimer from './components/searchTimer';
+import * as dna from 'dna';
 let Stopwatch = require("node-stopwatch").Stopwatch;
 let Client = require('node-rest-client').Client;
 
@@ -60,8 +61,11 @@ function initVectors(queryTokens, uninvertedList, organisms) {
         vectors.push([]);
         let k = 0;
         for (let j = 1; k < queryTokens.length; j++) {
+            // let isComplement; 
+            // console.log(uninvertedList[i].length / 2);
+            // j > (uninvertedList[i].length) / 2 ? isComplement = "complement": isComplement = "";
             if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
-                vectors[i].push({ organism: organisms.organisms[i], kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1], pos: uninvertedList[i][j].kmer[2] });
+                vectors[i].push({ organism: organisms.organisms[i], kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1], pos: uninvertedList[i][j].kmer[2], posComplement: uninvertedList[i][j].kmer[3] });
                 k++
                 k === queryTokens.length ? j = uninvertedList.length : j = 0;
             } else if (j === uninvertedList[i].length - 1) {
@@ -139,20 +143,30 @@ function uninvertList(results) {
     let uninvertedList = [];
     if (results.length > 0) {
         results.forEach(function(element) {
-        
-            for (let i = 0; i < element.d.length; i++) {
-                let docNo = element.d[i][0];
-                uninvertedList[docNo] ? null : uninvertedList.push( [docNo] );
-            }
 
-            for (let j = 0; j < element.d.length; j++) {
-            
-                for (let k = 0; k < uninvertedList.length; k++) {
-                    if (uninvertedList[k][0] === element.d[j][0]) {
+                for (let i = 0; i < element.d.length / 2; i++) {
+                    let docNo = element.d[i][0];
+                    uninvertedList[docNo] ? null : uninvertedList.push( [docNo] );
+                }
+
+            let len = element.d.length;
+
+            for (let j = 0; j < len / 2; j++) {
+                // let isComplement;
+                // j < (element.d.length) / 2 ? isComplement = "": isComplement = "complement";
+                for (let k = 0; k < len / 2; k++) {
+                    if (uninvertedList[k][0] === element.d[j][0]) { // match document to new array element
                         initElement(uninvertedList[k]);
-                        uninvertedList[k][uninvertedList[k].length-1].kmer[0] = element.k;
-                        uninvertedList[k][uninvertedList[k].length-1].kmer[1] = element.d[j][1];
-                        uninvertedList[k][uninvertedList[k].length-1].kmer[2] = element.d[j][2];
+                            uninvertedList[k][uninvertedList[k].length-1].kmer[0] = element.k;
+                            uninvertedList[k][uninvertedList[k].length-1].kmer[1] += element.d[j][1];
+                            uninvertedList[k][uninvertedList[k].length-1].kmer[2] = element.d[j][2];
+
+                           if (uninvertedList[k][uninvertedList[k].length-1].kmer[0] === element.k) {
+                               console.log('matches');
+                           };
+                            uninvertedList[k][uninvertedList[k].length-1].kmer[1] += element.d[j+len/2][1];
+                            uninvertedList[k][uninvertedList[k].length-1].kmer[3] = element.d[j+len/2][2];
+
                     }
                 }
             };
@@ -214,7 +228,8 @@ class App extends Component {
             searchTimeStart: 0,
             searchTime: 0,
             sortedList: [],
-            an: []
+            an: [],
+            reverseComplement: []
         }
 
         endSearchTime = endSearchTime.bind(this);
@@ -273,7 +288,7 @@ class App extends Component {
           let organisms = results.pop();
           let seqLen = results.pop();
           rankResults(results, seqLen, organisms);
-          uninvertList(results);
+          // uninvertList(results);
         });     
     }
 
@@ -331,17 +346,20 @@ class App extends Component {
       time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
     }
       
-    createIndex(ra, i_main, sequenceLengths, organisms) {
+    createIndex(ra, i_main, arrayLength, sequenceLengths, organisms, revComp) {
         indexStopwatch.start();
         let queryLength = ra.length;
         let positionStart;
+        let documentNumber;
+        revComp ? documentNumber = arrayLength + i_main : documentNumber = i_main;
+        console.log(documentNumber);
         let index = this.state.indexes;
         for (let j = 0; j < ra.length; j++) {
             for (let i = 0; i < ra[j].length; i++) {
                 positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
                 let exists = index.findIndex(matchesKmer, ra[j][i]);
                 if (exists < 1) {
-                    index.push( { k: ra[j][i], d: [[i_main,1,[positionStart]]] }) 
+                    index.push( { k: ra[j][i], d: [[documentNumber, 1 , [positionStart]]] }) 
                 } else {
                     i_main === index[exists].d[index[exists].d.length - 1][0] ? null : index[exists].d.push([i_main,0,[]]);                   
                     index[exists].d[index[exists].d.length - 1][1] += 1;
@@ -349,7 +367,7 @@ class App extends Component {
                 }  
             }    
         }
-        index.push({ organisms: organisms });
+        i_main === arrayLength - 1 && revComp === true ? index.push({ organisms: organisms, sequence_count: arrayLength }): null;
         indexStopwatch.stop();
         let minutes = Math.floor(indexStopwatch.elapsed.minutes);
         let seconds = indexStopwatch.elapsed.seconds % 60; 
@@ -389,6 +407,12 @@ class App extends Component {
         return sequenceLengths;
     }
 
+    createComplementStrand(sequence) {
+        console.log(this.state.reverseComplement);
+        let complement = dna.complStrand(sequence, true);
+        return complement;
+    }
+
     proccessRegex(regex, input, organism = false) {
         let matches, output = [];
         while (matches = regex.exec(input)) {
@@ -419,22 +443,29 @@ class App extends Component {
         }
         return { genesProducts, organisms };
     }
-        
-    indexMain() {
-        let ant = this.processAnnotations(this.state.annotations);
-        this.postAnnotations(ant.genesProducts);
-        document.getElementById('loader').style.display = 'grid';
-        let sa;
+
+    processSequences(sequenceArray, sequenceLengths, ant, revComp) {
         let indexTimes = { minutes: 0, seconds: 0 };
-        sa = this.state.sequences;
-        let sequenceLengths = this.getSequenceLengths(sa);
-        for (let i = 0; i < sa.length; i++) {
-          let ta = this.tokeniseSequence(sa[i]);
+        for (let i = 0; i < sequenceArray.length; i++) {
+          let ta = this.tokeniseSequence(sequenceArray[i]);
           let ra = this.createRotations(ta);
-          let timer = this.createIndex(ra, i, sequenceLengths, ant.organisms); // sets index in state and returns indexStopwatch result
+          let timer = this.createIndex(ra, i, sequenceArray.length, sequenceLengths, ant.organisms, revComp); // sets index in state and returns indexStopwatch result
           indexTimes.minutes += timer.minutes;
           indexTimes.seconds += timer.seconds;
         }
+        return indexTimes;
+    }
+        
+    indexMain() {
+        document.getElementById('loader').style.display = 'grid';
+        let ant = this.processAnnotations(this.state.annotations);
+        this.postAnnotations(ant.genesProducts);
+        let sa = this.state.sequences;
+        let rcsa = this.state.reverseComplement;
+        let sequenceLengths = this.getSequenceLengths(sa);
+        let indexTimes = this.processSequences(sa, sequenceLengths, ant, false);
+        this.processSequences(rcsa, sequenceLengths, ant, true); //TODO: fix indexTimes
+        
         let tempArray = this.state.indexes;
         tempArray.push({ seqLen: sequenceLengths });
         this.setState({ indexes: tempArray });      
@@ -456,7 +487,9 @@ class App extends Component {
         let fileContentsSeq = document.getElementById('file-contents-seq').value;
         let fileContentsAnn = document.getElementById('file-contents-ann').value;
         this.setState({ sequences: [...this.state.sequences, fileContentsSeq] });
-        this.setState({ annotations: [...this.state.annotations, fileContentsAnn]})
+        this.setState({ annotations: [...this.state.annotations, fileContentsAnn]});
+        let reverseComplement = this.createComplementStrand(fileContentsSeq);
+        this.setState({ reverseComplement: [...this.state.reverseComplement, reverseComplement]});
     }
 
     uploadFilesPage() {

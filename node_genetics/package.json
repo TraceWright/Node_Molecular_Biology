@@ -7,6 +7,7 @@
     "browserify-fs": "^1.0.0",
     "burrows-wheeler-transform": "^1.2.0",
     "cors": "^2.8.4",
+    "dna": "^0.1.6",
     "express": "^4.15.4",
     "igenius-smith-waterman": "^1.1.3",
     "mongodb": "^2.2.31",
