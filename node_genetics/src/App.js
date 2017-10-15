@@ -5,6 +5,7 @@ import SearchTimer from './components/searchTimer';
 import * as dna from 'dna';
 let Stopwatch = require("node-stopwatch").Stopwatch;
 let Client = require('node-rest-client').Client;
+var pdfConverter = require('jspdf');
 
 let indexStopwatch = Stopwatch.create();
 
@@ -230,6 +231,7 @@ class App extends Component {
         endSearchTime = endSearchTime.bind(this);
         rankResults = rankResults.bind(this); 
         displayResults = displayResults.bind(this);
+        this.onPrint = this.onPrint.bind(this);
         this.processAnnotations = this.processAnnotations.bind(this);
         this.searchIndex = this.searchIndex.bind(this);        
         this.submitSequence = this.submitSequence.bind(this);
@@ -247,6 +249,36 @@ class App extends Component {
         this.setState({
             [target.name]: target.value
         });
+    }
+
+    onPrint() {
+        const { results } = this.state.results;
+        var doc = new pdfConverter('p','pt','c6');
+
+        var specialElementHandlers = {
+            '#editor': function(element, renderer){
+                return true;
+            },
+            '.controls': function(element, renderer){
+                return true;
+            }
+        };
+
+        let reportStuff = document.getElementById('results-list').innerHTML;
+
+        doc.fromHTML(reportStuff, 15, 15, {
+            'width': 170, 
+            'elementHandlers': specialElementHandlers
+        });
+        
+        // doc.setFontSize(22);
+        // doc.text(20, 50, 'Park Entry Ticket');
+        // doc.setFontSize(16);
+        // doc.text(20, 80, 'Address1: ' + reportStuff);
+        // doc.text(20, 100, 'Address2: ' );
+        // doc.text(20, 120, 'Entry Date & time: ');
+        // doc.text(20, 140, 'Expiry date & time: ');
+        doc.save("test.pdf");
     }
 
     postAnnotations(geneProducts) {
@@ -553,13 +585,15 @@ class App extends Component {
                         <textarea placeholder="Enter sequences with a length of 7 bases, separated by a space (eg. AATTCAG GCGCTTA AATTCAG)" type="text" id='queryInput' name="querySeq" onChange={ this.handleChange } value={ this.state.querySeq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
                         <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word', display: 'none'}}>{ this.state.querySeq }</label>
                         <br/><br/><br/><br/><br/><br/>
-                        <button className="buttn" id="new-query-button" style={{float: 'right', marginTop: '20px', display: 'none'}} onClick={this.newQuery}>New Query</button>
-                        <button className="buttn" id="submit-button" style={{float: 'left', marginTop: '20px'}} onClick={this.searchMain}>Submit Query</button>
+                        <button className="buttn" id="new-query-button" style={{float: 'right', marginTop: '20px', display: 'none'}} onClick={ this.newQuery }>New Query</button>
+                        <button className="buttn" id="submit-button" style={{float: 'left', marginTop: '20px'}} onClick={ this.searchMain }>Submit Query</button>
                         <div id="search-timer" style={{ display: 'none' }}>
                             <SearchTimer timer={ this.state.searchTime } />  
                         </div>                  
                         <div id="results-list" style={{paddingTop: '100px'}}>
                             <ResultList results={ this.state.results } />
+                            <br/><br/>
+                            <button onClick={ this.onPrint }>Print</button>
                         </div>
                     </div>
 

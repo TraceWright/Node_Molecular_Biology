@@ -5,7 +5,8 @@ import Kmers from './kmer';
 
 const ResultListItem = ({result}) => {
    //const results = props.queryResults;
-console.log(result);
+//    console.log('result');
+//    console.log(result);
    result.pop();
    let a = 0;
 
@@ -14,7 +15,7 @@ console.log(result);
         return <Kmers key={a} result={km} />
     });
 
-    const organismName = "organism";
+    const organismName = `Organism: ${result[0].organism}`;
    return (
         <ListGroupItem>
             {organismName}
