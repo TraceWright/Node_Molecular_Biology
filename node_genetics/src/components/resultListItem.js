@@ -16,9 +16,13 @@ const ResultListItem = ({result}) => {
     });
 
     const organismName = `Organism: ${result[0].organism}`;
+    const sequenceLength = `Sequence Length: ${result[0].seqLength} base pairs`;
+
    return (
         <ListGroupItem>
             {organismName}
+            <br/>
+            {sequenceLength}
             {kmers}
             <hr id="line"/>
         </ListGroupItem>

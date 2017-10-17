@@ -19,7 +19,7 @@ function initElement(elem) {
     elem.push({ kmer: ['', 0, []] })
 };
 
-function sortResults(sortingArray) {
+function sortResultRanks(sortingArray) {
     let sortedArray = sortingArray.sort((a, b) => {     
         if (a[a.length - 1].cosSim > b[b.length - 1].cosSim) {
             return -1;
@@ -56,14 +56,14 @@ function endSearchTime() {
     this.setState({ searchTime:  searchTimeEnd - this.state.searchTimeStart});
 }
 
-function initVectors(queryTokens, uninvertedList, organisms) {
+function initVectors(queryTokens, uninvertedList, organisms, seqLen) {
     let vectors = [];
     for (let i = 0; i < uninvertedList.length; i++) {
         vectors.push([]);
         let k = 0;
         for (let j = 1; k < queryTokens.length; j++) {
             if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
-                vectors[i].push({ organism: organisms.organisms[i], kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1], pos: uninvertedList[i][j].kmer[2], posComplement: uninvertedList[i][j].kmer[3] });
+                vectors[i].push({ organism: organisms.organisms[i], seqLength: seqLen.seqLen[i], kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1], pos: uninvertedList[i][j].kmer[2], posComplement: uninvertedList[i][j].kmer[3] });
                 k++
                 k === queryTokens.length ? j = uninvertedList.length : j = 0;
             } else if (j === uninvertedList[i].length - 1) {
@@ -112,6 +112,25 @@ function displayResults(data) {
     this.setState({ results: data });
 }
 
+function sortPositions(sortingArray) {
+    for (let i = 0; i < sortingArray.length; i++) {
+        for (let j = 0; j < sortingArray[i].length - 1; j++) {
+            let sortArr = sortingArray[i][j].pos;
+            sortArr.sort((a, b) => {     
+                if (a < b) {
+                    return -1;
+                }
+                if (a > b) {
+                    return 1;
+                }
+                return 0;
+            });
+            sortingArray[i][j].pos = sortArr;
+        }
+    }
+    return sortingArray;
+}
+
 function matchProductsToPositions(vectors) {
     let v = JSON.stringify(vectors);
     var client = new Client();
@@ -129,11 +148,12 @@ function rankResults(results, seqLen, organisms) {
     endSearchTime();
     let uninvertedList = uninvertList(results);
     let queryTokens = this.tokeniseQuery(this.state.querySeq);
-    let vectors = initVectors(queryTokens, uninvertedList, organisms);
+    let vectors = initVectors(queryTokens, uninvertedList, organisms, seqLen);
     let vectorsWithStats = getStats(vectors, seqLen);
     let vectorsWithCosSim = calculateCosineSimilarity(vectorsWithStats);
-    let sortedList = sortResults(vectorsWithCosSim);
-    let vectorsWithCosSimAnn = matchProductsToPositions(sortedList);
+    let sortedListRanks = sortResultRanks(vectorsWithCosSim);
+    let sortedPositions = sortPositions(sortedListRanks);
+    let vectorsWithCosSimAnn = matchProductsToPositions(sortedPositions);
 }
 
 // workaround: 'this' was not available inside client
@@ -271,7 +291,7 @@ class App extends Component {
             'elementHandlers': specialElementHandlers
         });
         
-        // doc.setFontSize(22);
+        doc.setFontSize(18);
         // doc.text(20, 50, 'Park Entry Ticket');
         // doc.setFontSize(16);
         // doc.text(20, 80, 'Address1: ' + reportStuff);
