@@ -1,48 +1,34 @@
 import React from 'react';
-import Products from './products.js';
+import './../style.css';
 
 const Kmers = ({result}) => {
-    // console.log(result);
-    // result.pos = '';    // temporarily removed data for development
-    // result.posComplement = '';  // temporarily removed data for development
-    let r = Object.entries(result);
-    console.log('r');
-    console.log(r);
-    let b = 0; 
-    let c = 0;
-    let d = 0;
-    // const products = r.map((prod) => {
-    //     b++
-    //     return <li key={b} >{prod}</li>
-    // })
-    console.log('pos');
-    console.log(result.pos);
     const pos = result.pos.map((pos) => {
-        b++
-        d++
-        return <div><label key={pos[0]} >{pos[0]} &nbsp;</label><label key={pos[1].product}>{pos[1].product}</label></div>
+        return <tr><td key={pos[0]}>{pos[0]}</td><td style={{}} key={pos[1].product}>{pos[1].product}</td><td key={pos[1].sPos}>{pos[1].sPos}</td><td key={pos[1].ePos}>{pos[1].ePos}</td><br/></tr>
     });
     const posComplement = result.posComplement.map((posComplement) => {
-        c++
-        return <label key={c} >{posComplement[0]} &nbsp;</label>
+        return <tr><td key={posComplement[0]} >{posComplement[0]}</td><td style={{width: '800px'}} key={posComplement[1].product}>{posComplement[1].product}&nbsp;</td><td key={posComplement[1].sPos}>{posComplement[1].sPos}</td><td key={posComplement[1].ePos}>{posComplement[1].ePos}</td></tr>
     });
-   const kmer = `Kmer: ${result.kmer}`;
-   const termFreq = `Kmer Frequency: ${result.tf[0]}`;
-   console.log(kmer);
-    return (
-        <ul style={{ listStyle: 'none' }}>
-            {kmer}
-            <br/><br/>
-            {termFreq}
-            <br/><br/>
-            <label>Template Strand Positions:</label>
-            <br/><br/>
-            {pos} &nbsp;
-            <br/><br/>
-            <label>Complementary Strand Positions:</label>
-            <br/><br/>
-            {posComplement}
-        </ul>
+    const k = 'Kmer: ';
+    const kmer = `${result.kmer}`;
+    const frequency = ' Frequency: ';
+    const termFreq = `${result.tf[0]}`;
+    return (        
+        <div id="products-list">
+            <div style={{paddingTop:'0px !important'}}>
+                <b>{k}</b>
+                {kmer}
+                <b>{frequency}</b>
+                {termFreq}
+                <br/>
+                <h4>Template Strand</h4>
+                 <table width="100%"><th>Kmer Position</th><th>Gene Product</th><th>Start Position &nbsp;</th><th>End Position</th>{pos}</table>
+                <br/>
+            </div>
+            <div>
+            <h4>Complementary Strand</h4>
+            <table width="100%"><th>Kmer Position</th><th>Gene Product</th><th>Start Position &nbsp;</th><th>End Position</th>{posComplement}</table>
+            </div>
+       </div>
     );
 }
 

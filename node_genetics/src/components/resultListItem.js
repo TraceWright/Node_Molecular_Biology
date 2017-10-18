@@ -4,9 +4,6 @@ import Kmers from './kmer';
 
 
 const ResultListItem = ({result}) => {
-   //const results = props.queryResults;
-//    console.log('result');
-//    console.log(result);
    result.pop();
    let a = 0;
 
@@ -14,14 +11,18 @@ const ResultListItem = ({result}) => {
         a++
         return <Kmers key={a} result={km} />
     });
-
-    const organismName = `Organism: ${result[0].organism}`;
-    const sequenceLength = `Sequence Length: ${result[0].seqLength} base pairs`;
+    const on = 'Organism: ';
+    const sl = 'Sequence Length: ';
+    const organismName = `${result[0].organism}`;
+    const sequenceLength = `${result[0].seqLength} base pairs`;
 
    return (
+       // <div>this</div>
         <ListGroupItem>
+            <b>{on}</b>
             {organismName}
             <br/>
+            <b>{sl}</b>
             {sequenceLength}
             {kmers}
             <hr id="line"/>

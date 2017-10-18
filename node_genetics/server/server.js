@@ -29,7 +29,7 @@ server.post('/vectors', function(req, res, next) {
                         let posComplement = data[i][j].posComplement[k];
                         sem.take(function() {
                             collection.find({organism: data[i][j].organism, sPos: {$lt:pos}, ePos:{$gt:pos}},
-                                {_id:1, strand:1, strand:1, ePos:1, product:1, organism:1}).toArray(function(err, result) {
+                                {_id:1, strand:1, strand:1, sPos:1, ePos:1, product:1, organism:1}).toArray(function(err, result) {
                                 if (result[0] === undefined) {
                                     data[i][j].pos[k] = [pos, {}]
                                 }
@@ -37,7 +37,7 @@ server.post('/vectors', function(req, res, next) {
                                     data[i][j].pos[k] = [pos, result[0]]
                                 }
                                 collection.find({organism: data[i][j].organism, sPos: {$lt:posComplement}, ePos:{$gt:posComplement}},
-                                    {_id:1, strand:1, strand:1, ePos:1, product:1, organism:1}).toArray(function(err, result_comp) {
+                                    {_id:1, strand:1, strand:1, sPos:1, ePos:1, product:1, organism:1}).toArray(function(err, result_comp) {
                                         if (result_comp[0] === undefined) {
                                             data[i][j].posComplement[k] = [posComplement, {}]
                                         }
@@ -110,7 +110,7 @@ server.post('/query', function(req, res, next) {
     MongoClient.connect(url, function(err, db) { 
         assert.equal(null, err);
         let collection = db.collection('gene_indexes');
-        collection.find({k: { $in: req.body.data }},{_id: 0, k:1, d:1}).toArray(function(err, result) {
+        collection.find({k: { $in: req.body.data }},{_id: 0, k:1, d:1, strand:1}).toArray(function(err, result) {
             assert.equal(err, null);
             console.log("Found the following records");
             console.log(result);

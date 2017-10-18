@@ -19,10 +19,15 @@
   text-align: left!important;
 }
 
+.result {
+  grid-area: rslt;
+}
+
 .geneProcesser {
   grid-template-columns: 10% 10% 10% 10% 10% 10% 10% 10%;
   grid-template-areas:
     'search search search search search query query query'
+    'rslt rslt rslt rslt rslt rslt rslt rslt'
 }
 
 .file-uploader {

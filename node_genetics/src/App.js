@@ -108,15 +108,15 @@ function calculateCosineSimilarity(vectorsWithStats) {
 }
 
 function displayResults(data) {
-    console.log(data);
+    // document.getElementById('results').style.display = 'grid';
     this.setState({ results: data });
 }
 
 function sortPositions(sortingArray) {
     for (let i = 0; i < sortingArray.length; i++) {
-        for (let j = 0; j < sortingArray[i].length - 1; j++) {
-            let sortArr = sortingArray[i][j].pos;
-            sortArr.sort((a, b) => {     
+        for (let j = 1; j < sortingArray[i].length; j++) {
+            let sortArrPos = sortingArray[i][j].kmer[2];
+            sortArrPos.sort((a, b) => {     
                 if (a < b) {
                     return -1;
                 }
@@ -125,7 +125,18 @@ function sortPositions(sortingArray) {
                 }
                 return 0;
             });
-            sortingArray[i][j].pos = sortArr;
+            sortingArray[i][j].kmer[2] = sortArrPos;
+            let sortArrPosComplement = sortingArray[i][j].kmer[3];
+            sortArrPosComplement.sort((a, b) => {     
+                if (a < b) {
+                    return -1;
+                }
+                if (a > b) {
+                    return 1;
+                }
+                return 0;
+            });
+            sortingArray[i][j].kmer[3] = sortArrPosComplement;
         }
     }
     return sortingArray;
@@ -147,13 +158,13 @@ function matchProductsToPositions(vectors) {
 function rankResults(results, seqLen, organisms) {
     endSearchTime();
     let uninvertedList = uninvertList(results);
+    let sortedPositions = sortPositions(uninvertedList);
     let queryTokens = this.tokeniseQuery(this.state.querySeq);
-    let vectors = initVectors(queryTokens, uninvertedList, organisms, seqLen);
+    let vectors = initVectors(queryTokens, sortedPositions, organisms, seqLen);
     let vectorsWithStats = getStats(vectors, seqLen);
     let vectorsWithCosSim = calculateCosineSimilarity(vectorsWithStats);
     let sortedListRanks = sortResultRanks(vectorsWithCosSim);
-    let sortedPositions = sortPositions(sortedListRanks);
-    let vectorsWithCosSimAnn = matchProductsToPositions(sortedPositions);
+    let vectorsWithCosSimAnn = matchProductsToPositions(sortedListRanks);
 }
 
 // workaround: 'this' was not available inside client
@@ -173,15 +184,15 @@ function uninvertList(results) {
                 for (let k = 0; k < len / 2; k++) {
                     if (uninvertedList[k][0] === element.d[j][0]) { // match document to new array element
                         initElement(uninvertedList[k]);
-                            uninvertedList[k][uninvertedList[k].length-1].kmer[0] = element.k;
-                            uninvertedList[k][uninvertedList[k].length-1].kmer[1] += element.d[j][1];
-                            uninvertedList[k][uninvertedList[k].length-1].kmer[2] = element.d[j][2];
+                        uninvertedList[k][uninvertedList[k].length-1].kmer[0] = element.k;
+                        uninvertedList[k][uninvertedList[k].length-1].kmer[1] += element.d[j][1];
+                        uninvertedList[k][uninvertedList[k].length-1].kmer[2] = element.d[j][2];
 
-                           if (uninvertedList[k][uninvertedList[k].length-1].kmer[0] === element.k) {
-                               console.log('matches');
-                           };
-                            uninvertedList[k][uninvertedList[k].length-1].kmer[1] += element.d[j+len/2][1];
-                            uninvertedList[k][uninvertedList[k].length-1].kmer[3] = element.d[j+len/2][2];
+                        if (uninvertedList[k][uninvertedList[k].length-1].kmer[0] === element.k) {
+                            console.log('matches');
+                        };
+                         uninvertedList[k][uninvertedList[k].length-1].kmer[1] += element.d[j+len/2][1];
+                         uninvertedList[k][uninvertedList[k].length-1].kmer[3] = element.d[j+len/2][2];
 
                     }
                 }
@@ -285,19 +296,12 @@ class App extends Component {
         };
 
         let reportStuff = document.getElementById('results-list').innerHTML;
-
-        doc.fromHTML(reportStuff, 15, 15, {
-            'width': 170, 
+        reportStuff += '<style type="text/css">table {font-size: 6px;}</style>';
+        doc.setFontSize(8);
+        doc.fromHTML(reportStuff, 40, 40, { 
             'elementHandlers': specialElementHandlers
         });
         
-        doc.setFontSize(18);
-        // doc.text(20, 50, 'Park Entry Ticket');
-        // doc.setFontSize(16);
-        // doc.text(20, 80, 'Address1: ' + reportStuff);
-        // doc.text(20, 100, 'Address2: ' );
-        // doc.text(20, 120, 'Entry Date & time: ');
-        // doc.text(20, 140, 'Expiry date & time: ');
         doc.save("test.pdf");
     }
 
@@ -610,13 +614,15 @@ class App extends Component {
                         <div id="search-timer" style={{ display: 'none' }}>
                             <SearchTimer timer={ this.state.searchTime } />  
                         </div>                  
-                        <div id="results-list" style={{paddingTop: '100px'}}>
-                            <ResultList results={ this.state.results } />
-                            <br/><br/>
-                            <button onClick={ this.onPrint }>Print</button>
-                        </div>
                     </div>
+                </div>
 
+                <div id="results" className="results" style={{textAlign: 'left', width: '1100px', margin: 'auto'}}>
+                <h2 className="heading">Results</h2>
+                        <button className='buttn' onClick={ this.onPrint } style={{ marginBottom: '40px', marginTop: '20px' }}>Print</button>
+                        <div id="results-list">
+                            <ResultList results={ this.state.results } />
+                    </div>
                 </div>
             </div>
         </div>
