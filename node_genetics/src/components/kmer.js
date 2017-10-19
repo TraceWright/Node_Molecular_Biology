@@ -23,12 +23,12 @@ const Kmers = ({result}) => {
                 {termFreq}
                 <br/>
                 <h4>Template Strand</h4>
-                <table id="products-table"><th>Kmer Position</th><th>Gene Product</th><th>Start Position &nbsp;</th><th>End Position</th>{pos}</table>
+                <table className="products-table" style={{display:'none'}}><th>Kmer Position</th><th>Gene Product</th><th>Start Position &nbsp;</th><th>End Position</th>{pos}</table>
                 <br/>
             </div>
             <div>
                 <h4>Complementary Strand</h4>
-                <table id="products-table"><th>Kmer Position</th><th>Gene Product</th><th>Start Position &nbsp;</th><th>End Position</th>{posComplement}</table>
+                <table className="products-table" style={{display:'none'}}><th>Kmer Position</th><th>Gene Product</th><th>Start Position &nbsp;</th><th>End Position</th>{posComplement}</table>
             </div>
        </div>
     );

@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
 import './style.css';
 import ResultList from './components/resultList';
+import Evaluation from './components/evaluation';
 import SearchTimer from './components/searchTimer';
 import * as dna from 'dna';
-let Stopwatch = require("node-stopwatch").Stopwatch;
-let Client = require('node-rest-client').Client;
-var pdfConverter = require('jspdf');
-// var cpuStats = require('cpu-stats')
+const Stopwatch = require("node-stopwatch").Stopwatch;
+const Client = require('node-rest-client').Client;
+const pdfConverter = require('jspdf');
+const cpus = require('cpus');
 
 let indexStopwatch = Stopwatch.create();
 
@@ -62,16 +63,20 @@ function initVectors(queryTokens, uninvertedList, organisms, seqLen) {
     for (let i = 0; i < uninvertedList.length; i++) {
         vectors.push([]);
         let k = 0;
-        for (let j = 1; k < queryTokens.length; j++) {
-            if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
-                vectors[i].push({ organism: organisms.organisms[i], seqLength: seqLen.seqLen[i], kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1], pos: uninvertedList[i][j].kmer[2], posComplement: uninvertedList[i][j].kmer[3] });
-                k++
-                k === queryTokens.length ? j = uninvertedList.length : j = 0;
-            } else if (j === uninvertedList[i].length - 1) {
-                vectors[i].push({ kmer: queryTokens[k], tf: 0, tfidf: 0 });
-                j = 0
-                k++
+        if (uninvertedList[i].length > 1) {
+            for (let j = 1; k < queryTokens.length; j++) {
+                if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
+                    vectors[i].push({ organism: organisms.organisms[i], seqLength: seqLen.seqLen[i], kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1], pos: uninvertedList[i][j].kmer[2], posComplement: uninvertedList[i][j].kmer[3] });
+                    k++
+                    k === queryTokens.length ? j = uninvertedList.length : j = 0;
+                } else if (j === uninvertedList[i].length - 1) {
+                    vectors[i].push({ kmer: queryTokens[k], tf: 0, tfidf: 0 });
+                    j = 0
+                    k++
+                }
             }
+        } else {
+            vectors[i].push({ organism: organisms.organisms[i], seqLength: seqLen.seqLen[i] });
         }
     }
     return vectors;
@@ -254,6 +259,7 @@ class App extends Component {
             indexes: [], 
             searchTimeStart: 0,
             searchTime: 0,
+            indexTime: {},
             results: [],
             an: [],
             reverseComplement: []
@@ -268,7 +274,8 @@ class App extends Component {
         this.submitSequence = this.submitSequence.bind(this);
         this.searchMain = this.searchMain.bind(this);        
         this.postData = this.postData.bind(this);        
-        this.indexMain = this.indexMain.bind(this);        
+        this.indexMain = this.indexMain.bind(this);   
+        this.createIndexSpinner = this.createIndexSpinner.bind(this);  
         this.createIndex = this.createIndex.bind(this);
         this.tokeniseSequence = this.tokeniseSequence.bind(this);
         this.createRotations = this.createRotations.bind(this);
@@ -428,7 +435,6 @@ class App extends Component {
                             match = l;
                         }
                     }
-
                     if (match < 0) {
                         index[exists].d.push([i_main, 1, [[positionStart, strand]] ]);                   
                     } else {
@@ -527,17 +533,11 @@ class App extends Component {
         return indexTimes;
     }
 
-    // getPerformanceStats() {
-    //     cpuStats(1000, function(error, result) {
-    //         if(error) return console.error('Oh noes!', error) // actually this will never happen 
-           
-    //         console.info(result)
-    //       })
-    // }
+    getPerformanceStats() {
+        
+    }
         
     indexMain() {
-        // this.getPerformanceStats();
-        document.getElementById('loader').style.display = 'grid';
         let ant = this.processAnnotations(this.state.annotations);
         this.postAnnotations(ant.genesProducts);
         let sa = this.state.sequences;
@@ -546,6 +546,7 @@ class App extends Component {
         let indexTimesTemplate = this.processSequences(sa, sequenceLengths, ant, false);
         let indexTimesComplementary = this.processSequences(rcsa, sequenceLengths, ant, true);
         let indexTimes = this.addTimes(indexTimesTemplate, indexTimesComplementary);
+        this.setState({ indexTime: indexTimes });
         let tempArray = this.state.indexes;
         tempArray.push({ seqLen: sequenceLengths });
         this.setState({ indexes: tempArray });      
@@ -554,10 +555,34 @@ class App extends Component {
         document.getElementById('loader').style.display = 'none'; 
     }
 
-    // showGeneProducts() {
-    //     document.getElementById('products-table').style.display = 'grid';
-    //     // document.getElementsByClassName('products-table-complementary').style.display = 'grid';
-    // }
+    createIndexSpinner() {
+        // this.getPerformanceStats();
+        document.getElementById('loader').style.display = '';
+        // Give the display some time to update before doing the main workload
+        setTimeout(this.indexMain, 500);
+    }
+
+    showGeneProducts() {
+        // document.getElementById('products-table').style.display = 'grid';
+        //document.getElementsByClassName('products-table-complementary').style.display = 'grid';
+        let list = document.getElementsByClassName('products-table');
+        for (var i = 0; i < list.length; i++) {
+            list[i].style.display='';
+        }
+    }
+
+    hideEval() {
+        document.getElementById('hide-eval').style.display = 'none';
+        document.getElementById('eval').style.display = '';
+        document.getElementById('evaluation').style.display = 'none'; 
+    }
+
+    evaluateResults() {
+        document.getElementById('results-list').style.display = 'none';
+        document.getElementById('evaluation').style.display = 'grid'; 
+        document.getElementById('eval').style.display = 'none'; 
+        document.getElementById('hide-eval').style.display = '';
+    }
 
     newQuery() {
         document.getElementById('queryInput').style.display = 'grid'; 
@@ -630,7 +655,7 @@ class App extends Component {
                 <div className="indexing-querying" id="indexing-querying"> 
                     <div className="indexing">
                         <h2 className="heading">Indexing</h2><br/><br/>
-                        <button className='buttn' id="mainBttn" onClick={ this.indexMain }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button>
+                        <button className='buttn' id="mainBttn" onClick={ this.createIndexSpinner }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button>
                         <label style={{ paddingLeft: '40px' }} id="index-timer"></label>
                         <br/><br/><br/>
                         <button className='buttn' id="post-data-button" onClick={ this.postData }>Post Index to Database</button>
@@ -654,10 +679,15 @@ class App extends Component {
 
                 <div id="results" className="results" style={{textAlign: 'left', width: '1100px', margin: 'auto'}}>
                 <h2 className="heading">Results</h2>
-                    <button className='buttn' onClick={ this.onPrint } style={{ marginBottom: '40px', marginTop: '20px', width: '60px' }}>Print</button>
-                    {/* <button className='buttn' onClick={ this.showGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px' }}>Show Gene Products</button> */}
+                    <button className='buttn' onClick={ this.onPrint } style={{ marginBottom: '40px', marginTop: '20px', width: '70px' }}>Print</button>
+                    <button id="eval" className='buttn' onClick={ this.evaluateResults } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '150px' }}>Evaluate Results</button>
+                    <button id="hide-eval" className='buttn' onClick={ this.hideEval } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '150px' }}>Hide Evaluation</button>
+                    <button className='buttn' onClick={ this.showGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px' }}>Show Gene Products</button>
                     <div id="results-list">
                         <ResultList results={ this.state.results } />
+                    </div>
+                    <div id="evaluation" style={{ display: 'none' }}>
+                        <Evaluation searchTime={ this.state.searchTime } indexTime={ this.state.indexTime }/>
                     </div>
                 </div>
             </div>
