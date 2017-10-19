@@ -115,28 +115,29 @@ function displayResults(data) {
 function sortPositions(sortingArray) {
     for (let i = 0; i < sortingArray.length; i++) {
         for (let j = 1; j < sortingArray[i].length; j++) {
-            let sortArrPos = sortingArray[i][j].kmer[2];
-            sortArrPos.sort((a, b) => {     
-                if (a < b) {
+            let sortArr = sortingArray[i][j].kmer[2];
+            sortArr.sort((a, b) => {     
+                if (a[0] < b[0]) {
                     return -1;
                 }
-                if (a > b) {
+                if (a[0] > b[0]) {
                     return 1;
                 }
                 return 0;
             });
-            sortingArray[i][j].kmer[2] = sortArrPos;
-            let sortArrPosComplement = sortingArray[i][j].kmer[3];
-            sortArrPosComplement.sort((a, b) => {     
-                if (a < b) {
-                    return -1;
+            let sortArrPos = [];
+            let sortArrPosComplement = [];
+            for (let k = 0; k < sortArr.length; k++) {
+                if (sortArr[k][1] === "t") {
+                    sortArrPos.push(sortArr[k][0]);
+                } else if (sortArr[k][1] === "c") {
+                    sortArrPosComplement.push(sortArr[k][0])
+                } else {
+                    console.log("ERROR: not template or complement strand")
                 }
-                if (a > b) {
-                    return 1;
-                }
-                return 0;
-            });
-            sortingArray[i][j].kmer[3] = sortArrPosComplement;
+            }
+            sortingArray[i][j].kmer[2] = sortArrPos;      // save template strand positions to element 2, and complementary strand positions to element 3
+            sortingArray[i][j].kmer.push(sortArrPosComplement);
         }
     }
     return sortingArray;
@@ -157,7 +158,7 @@ function matchProductsToPositions(vectors) {
 // workaround: 'this' was not available inside client
 function rankResults(results, seqLen, organisms) {
     endSearchTime();
-    let uninvertedList = uninvertList(results);
+    let uninvertedList = uninvertList(results, organisms);
     let sortedPositions = sortPositions(uninvertedList);
     let queryTokens = this.tokeniseQuery(this.state.querySeq);
     let vectors = initVectors(queryTokens, sortedPositions, organisms, seqLen);
@@ -168,31 +169,29 @@ function rankResults(results, seqLen, organisms) {
 }
 
 // workaround: 'this' was not available inside client
-function uninvertList(results) {
+function uninvertList(results, organisms) {
     let uninvertedList = [];
+    for (let i = 0; i < organisms.organisms.length; i++) {
+        uninvertedList.push([i]);
+    }
     if (results.length > 0) {
         results.forEach(function(element) {
 
-                for (let i = 0; i < element.d.length / 2; i++) {
-                    let docNo = element.d[i][0];
-                    uninvertedList[docNo] ? null : uninvertedList.push( [docNo] );
-                }
-
-            let len = element.d.length;
-
-            for (let j = 0; j < len / 2; j++) {
-                for (let k = 0; k < len / 2; k++) {
-                    if (uninvertedList[k][0] === element.d[j][0]) { // match document to new array element
+            for (let j = 0; j <  element.d.length; j++) {
+                for (let k = 0; k < uninvertedList.length; k++) {
+                    if (uninvertedList[k][0] === element.d[j][0]) { // match results document/organism to new array element
                         initElement(uninvertedList[k]);
                         uninvertedList[k][uninvertedList[k].length-1].kmer[0] = element.k;
+
                         uninvertedList[k][uninvertedList[k].length-1].kmer[1] += element.d[j][1];
                         uninvertedList[k][uninvertedList[k].length-1].kmer[2] = element.d[j][2];
+                       
 
-                        if (uninvertedList[k][uninvertedList[k].length-1].kmer[0] === element.k) {
-                            console.log('matches');
-                        };
-                         uninvertedList[k][uninvertedList[k].length-1].kmer[1] += element.d[j+len/2][1];
-                         uninvertedList[k][uninvertedList[k].length-1].kmer[3] = element.d[j+len/2][2];
+                        // if (uninvertedList[k][uninvertedList[k].length-1].kmer[0] === element.k) {
+                        //     console.log('matches');
+                        // };
+                        //  uninvertedList[k][uninvertedList[k].length-1].kmer[1] += element.d[j+len/2][1];
+                        //  uninvertedList[k][uninvertedList[k].length-1].kmer[3] = element.d[j+len/2][2];
 
                     }
                 }
@@ -399,23 +398,32 @@ class App extends Component {
     }
       
     createIndex(ra, i_main, arrayLength, sequenceLengths, organisms, revComp) {
+        let strand = '';
+        revComp === true ? strand = 'c': strand = 't';
         indexStopwatch.start();
         let queryLength = ra.length;
         let positionStart;
-        let documentNumber;
-        revComp ? documentNumber = arrayLength + i_main : documentNumber = i_main;
-        console.log(documentNumber);
         let index = this.state.indexes;
         for (let j = 0; j < ra.length; j++) {
             for (let i = 0; i < ra[j].length; i++) {
                 positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
                 let exists = index.findIndex(matchesKmer, ra[j][i]);
                 if (exists < 1) {
-                    index.push( { k: ra[j][i], d: [[documentNumber, 1 , [positionStart]]] }) 
+                    index.push( { k: ra[j][i], d: [[i_main, 1 , [[positionStart, strand]]]] }) 
                 } else {
-                    i_main === index[exists].d[index[exists].d.length - 1][0] ? null : index[exists].d.push([i_main,0,[]]);                   
-                    index[exists].d[index[exists].d.length - 1][1] += 1;
-                    index[exists].d[index[exists].d.length - 1][2].push(positionStart); 
+                    let match = -1;
+                    for (let l = 0; l < index[exists].d.length; l++) {
+                        if (i_main === index[exists].d[l][0]) {
+                            match = l;
+                        }
+                    }
+
+                    if (match < 0) {
+                        index[exists].d.push([i_main, 1, [[positionStart, strand]] ]);                   
+                    } else {
+                        index[exists].d[match][1] += 1;
+                        index[exists].d[match][2].push([positionStart, strand]); 
+                    }    
                 }  
             }    
         }
