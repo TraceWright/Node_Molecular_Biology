@@ -6,6 +6,7 @@ import * as dna from 'dna';
 let Stopwatch = require("node-stopwatch").Stopwatch;
 let Client = require('node-rest-client').Client;
 var pdfConverter = require('jspdf');
+// var cpuStats = require('cpu-stats')
 
 let indexStopwatch = Stopwatch.create();
 
@@ -359,7 +360,7 @@ class App extends Component {
 
     searchIndex(tokensArray) {
         let startSearchTime = Date.now();
-        this.setState({ searchTimeStart: startSearchTime })
+        this.setState({ searchTimeStart: startSearchTime });
         this.postSearchQuery(tokensArray);
     }
 
@@ -395,6 +396,16 @@ class App extends Component {
 
     displayTimer(time, uiElement) {
       time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
+    }
+
+    addTimes(timeOne, timeTwo) {
+        let minutes = timeOne.minutes + timeTwo.minutes;
+        let seconds = timeOne.seconds + timeTwo.seconds;
+        if (seconds > 60) {
+            seconds -= 60;
+            minutes += 1;
+        }
+        return { minutes: minutes, seconds: seconds };
     }
       
     createIndex(ra, i_main, arrayLength, sequenceLengths, organisms, revComp) {
@@ -515,17 +526,26 @@ class App extends Component {
         }
         return indexTimes;
     }
+
+    // getPerformanceStats() {
+    //     cpuStats(1000, function(error, result) {
+    //         if(error) return console.error('Oh noes!', error) // actually this will never happen 
+           
+    //         console.info(result)
+    //       })
+    // }
         
     indexMain() {
+        // this.getPerformanceStats();
         document.getElementById('loader').style.display = 'grid';
         let ant = this.processAnnotations(this.state.annotations);
         this.postAnnotations(ant.genesProducts);
         let sa = this.state.sequences;
         let rcsa = this.state.reverseComplement;
         let sequenceLengths = this.getSequenceLengths(sa);
-        let indexTimes = this.processSequences(sa, sequenceLengths, ant, false);
-        this.processSequences(rcsa, sequenceLengths, ant, true); //TODO: fix indexTimes
-        
+        let indexTimesTemplate = this.processSequences(sa, sequenceLengths, ant, false);
+        let indexTimesComplementary = this.processSequences(rcsa, sequenceLengths, ant, true);
+        let indexTimes = this.addTimes(indexTimesTemplate, indexTimesComplementary);
         let tempArray = this.state.indexes;
         tempArray.push({ seqLen: sequenceLengths });
         this.setState({ indexes: tempArray });      
@@ -533,6 +553,11 @@ class App extends Component {
         this.displayTimer(indexTimes, indexTimer);
         document.getElementById('loader').style.display = 'none'; 
     }
+
+    // showGeneProducts() {
+    //     document.getElementById('products-table').style.display = 'grid';
+    //     // document.getElementsByClassName('products-table-complementary').style.display = 'grid';
+    // }
 
     newQuery() {
         document.getElementById('queryInput').style.display = 'grid'; 
@@ -557,6 +582,7 @@ class App extends Component {
         document.getElementById('back-btn').style.display = 'grid'; 
         document.getElementById('upload-files-btn').style.display = 'none'; 
         document.getElementById('indexing-querying').style.display = 'none';
+        document.getElementById('results').style.display = 'none';
     }
 
     back() {
@@ -564,6 +590,7 @@ class App extends Component {
         document.getElementById('file-uploads').style.display = 'none';
         document.getElementById('upload-files-btn').style.display = 'grid';
         document.getElementById('indexing-querying').style.display = 'grid';
+        document.getElementById('results').style.display = 'grid';
     }
 
     render() {
@@ -627,9 +654,10 @@ class App extends Component {
 
                 <div id="results" className="results" style={{textAlign: 'left', width: '1100px', margin: 'auto'}}>
                 <h2 className="heading">Results</h2>
-                        <button className='buttn' onClick={ this.onPrint } style={{ marginBottom: '40px', marginTop: '20px' }}>Print</button>
-                        <div id="results-list">
-                            <ResultList results={ this.state.results } />
+                    <button className='buttn' onClick={ this.onPrint } style={{ marginBottom: '40px', marginTop: '20px', width: '60px' }}>Print</button>
+                    {/* <button className='buttn' onClick={ this.showGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px' }}>Show Gene Products</button> */}
+                    <div id="results-list">
+                        <ResultList results={ this.state.results } />
                     </div>
                 </div>
             </div>

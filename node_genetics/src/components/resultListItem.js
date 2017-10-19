@@ -24,6 +24,7 @@ const ResultListItem = ({result}) => {
             <br/>
             <b>{sl}</b>
             {sequenceLength}
+            <br/><br/>
             {kmers}
             <hr id="line"/>
         </ListGroupItem>
