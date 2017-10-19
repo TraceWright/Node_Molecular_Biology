@@ -7,7 +7,6 @@ import * as dna from 'dna';
 const Stopwatch = require("node-stopwatch").Stopwatch;
 const Client = require('node-rest-client').Client;
 const pdfConverter = require('jspdf');
-const cpus = require('cpus');
 
 let indexStopwatch = Stopwatch.create();
 
@@ -262,7 +261,8 @@ class App extends Component {
             indexTime: {},
             results: [],
             an: [],
-            reverseComplement: []
+            reverseComplement: [],
+            kmerLength: 10 
         }
 
         endSearchTime = endSearchTime.bind(this);
@@ -471,8 +471,11 @@ class App extends Component {
     }
 
     tokeniseSequence(s) {
-        let tok = s.replace('/,/g' , '')
-        let tokArray = tok.match(/.{1,7}/g);
+        let tok = s.replace('/,/g' , '');
+        let len = this.state.kmerLength;
+        let regex = new RegExp(`.{1,${len}}`, "g");
+        let tokArray = tok.match(regex);
+        // let tokArray = tok.match(/.{1,7}/g);
         return tokArray;
     }
 
