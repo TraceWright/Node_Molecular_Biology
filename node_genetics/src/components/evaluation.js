@@ -10,7 +10,7 @@ const Evaluation = (props) => {
     return (
         <div>
             <h3>Efficiency</h3>
-            <label>Search Time: { props.searchTime }</label><br/>
+            <label>Search Time: { props.searchTime } seconds</label><br/>
             <label id="index-time">Indexing Time: {`${props.indexTime.minutes}:${Math.round(props.indexTime.seconds)} minutes`}</label><br/>
             <label>Index Size: </label> 
             <h3>Efficacy</h3> 

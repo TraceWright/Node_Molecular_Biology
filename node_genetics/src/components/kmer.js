@@ -22,14 +22,16 @@ const Kmers = ({result}) => {
                 <b>{frequency}</b>
                 {termFreq}
                 <br/>
-                <h4>Template Strand</h4>
-                <table className="products-table" style={{display:'none'}}><th>Kmer Position</th><th>Gene Product</th><th>Start Position &nbsp;</th><th>End Position</th>{pos}</table>
+                <h4 className="strand-heading" style={{display:'none'}}>Template Strand</h4>
+                <table className="products-table" style={{display:'none', color: 'grey'}}><th>Kmer Position</th><th>&nbsp;&nbsp;Gene Product</th><th>Start Position &nbsp;</th><th>End Position</th>{pos}</table>
                 <br/>
             </div>
             <div>
-                <h4>Complementary Strand</h4>
-                <table className="products-table" style={{display:'none'}}><th>Kmer Position</th><th>Gene Product</th><th>Start Position &nbsp;</th><th>End Position</th>{posComplement}</table>
+                <h4 className="strand-heading" style={{display:'none'}}>Complementary Strand</h4>
+                <table className="products-table" style={{display:'none', color: 'grey'}}><th>Kmer Position</th><th>&nbsp;&nbsp;Gene Product</th><th>Start Position &nbsp;</th><th>End Position</th>{posComplement}</table>
             </div>
+            <hr className="kmer-line" style={{ display: 'none' }}/>
+            {/* <div style={{ display: 'block', pageBreakAfter: 'always' }}></div> */}
        </div>
     );
     } else {

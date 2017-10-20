@@ -1,11 +1,9 @@
 import React from 'react';
 
-const SearchTimer = ({timer}) => {
-    const searchTime = timer / 100;
-    
+const SearchTimer = ({timer}) => {    
     return (
         <div>
-            <label>{searchTime} seconds</label> 
+            <label>{timer} seconds</label> 
         </div>
     )
 }

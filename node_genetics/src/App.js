@@ -54,7 +54,8 @@ function calculateIDF(vectors, kmer) {
 function endSearchTime() {
     document.getElementById('search-timer').style.display = 'grid';
     let searchTimeEnd = Date.now();
-    this.setState({ searchTime:  (searchTimeEnd - this.state.searchTimeStart).toFixed(2) * 0.1});
+    console.log((searchTimeEnd - this.state.searchTimeStart).toFixed(2));
+    this.setState({ searchTime:  ((searchTimeEnd - this.state.searchTimeStart).toFixed(2)) * 0.001});
 }
 
 function initVectors(queryTokens, uninvertedList, organisms, seqLen) {
@@ -269,6 +270,7 @@ class App extends Component {
         rankResults = rankResults.bind(this); 
         displayResults = displayResults.bind(this);
         this.onPrint = this.onPrint.bind(this);
+        this.evaluateResults = this.evaluateResults.bind(this);
         this.processAnnotations = this.processAnnotations.bind(this);
         this.searchIndex = this.searchIndex.bind(this);        
         this.submitSequence = this.submitSequence.bind(this);
@@ -310,6 +312,18 @@ class App extends Component {
         });
         
         doc.save("test.pdf");
+    }
+
+    getIndexStats() {
+        let results;
+        var client = new Client();
+        var args = {
+            headers: { "Content-Type": "application/json" },
+        };
+        client.post("http://localhost:4000/stats", args, function (data, response) {
+          results = JSON.parse(data.toString());
+          console.log(results);
+        });     
     }
 
     postAnnotations(geneProducts) {
@@ -524,6 +538,18 @@ class App extends Component {
         return { genesProducts, organisms };
     }
 
+    // processSequences(sequenceArray, sequenceLengths, ant, revComp) {
+    //     let indexTimes = { minutes: 0, seconds: 0 };
+    //     for (let i = 0; i < sequenceArray.length; i++) {
+    //       let ta = this.tokeniseSequence(sequenceArray[i]);
+    //       let ra = this.createRotations(ta);
+    //       let timer = this.createIndex(ra, i, sequenceArray.length, sequenceLengths, ant.organisms, revComp); // sets index in state and returns indexStopwatch result
+    //       indexTimes.minutes += timer.minutes;
+    //       indexTimes.seconds += timer.seconds;
+    //     }
+    //     return indexTimes;
+    // }
+
     processSequences(sequenceArray, sequenceLengths, ant, revComp) {
         let indexTimes = { minutes: 0, seconds: 0 };
         for (let i = 0; i < sequenceArray.length; i++) {
@@ -536,9 +562,7 @@ class App extends Component {
         return indexTimes;
     }
 
-    getPerformanceStats() {
-        
-    }
+
         
     indexMain() {
         let ant = this.processAnnotations(this.state.annotations);
@@ -546,7 +570,7 @@ class App extends Component {
         let sa = this.state.sequences;
         let rcsa = this.state.reverseComplement;
         let sequenceLengths = this.getSequenceLengths(sa);
-        let indexTimesTemplate = this.processSequences(sa, sequenceLengths, ant, false);
+        let indexTimesTemplate = this.processSequences(sa, rcsa, sequenceLengths, ant, false);
         let indexTimesComplementary = this.processSequences(rcsa, sequenceLengths, ant, true);
         let indexTimes = this.addTimes(indexTimesTemplate, indexTimesComplementary);
         this.setState({ indexTime: indexTimes });
@@ -566,17 +590,31 @@ class App extends Component {
     }
 
     showGeneProducts() {
-        // document.getElementById('products-table').style.display = 'grid';
-        //document.getElementsByClassName('products-table-complementary').style.display = 'grid';
         let list = document.getElementsByClassName('products-table');
+        let heading = document.getElementsByClassName('strand-heading');
+        let kmerLine = document.getElementsByClassName('kmer-line');        
         for (var i = 0; i < list.length; i++) {
             list[i].style.display='';
+            heading[i].style.display='';  
+        }
+        for (let j = 0; j < kmerLine.length; j++) {
+            kmerLine[j].style.display='';
         }
         document.getElementById('show-gene-prod').style.display = 'none';
         document.getElementById('hide-gene-prod').style.display = '';
     }
 
     hideGeneProducts() {
+        let list = document.getElementsByClassName('products-table');
+        let heading = document.getElementsByClassName('strand-heading');
+        let kmerLine = document.getElementsByClassName('kmer-line');
+        for (let i = 0; i < list.length; i++) {
+            list[i].style.display='none';
+            heading[i].style.display='none';
+        }
+        for (let j = 0; j < kmerLine.length; j++) {
+            kmerLine[j].style.display='none';
+        }
         document.getElementById('show-gene-prod').style.display = '';
         document.getElementById('hide-gene-prod').style.display = 'none';
     }
@@ -588,6 +626,7 @@ class App extends Component {
     }
 
     evaluateResults() {
+        this.getIndexStats();
         document.getElementById('results-list').style.display = 'none';
         document.getElementById('evaluation').style.display = 'grid'; 
         document.getElementById('eval').style.display = 'none'; 
@@ -695,6 +734,7 @@ class App extends Component {
                     <button id="hide-gene-prod" className='buttn' onClick={ this.hideGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px', display: 'none' }}>Hide Gene Products</button>
                     <button id="eval" className='buttn' onClick={ this.evaluateResults } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '150px' }}>Evaluate Results</button>
                     <button id="hide-eval" className='buttn' onClick={ this.hideEval } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '150px' }}>Hide Evaluation</button>
+                    <button id="test" className='buttn' onClick={ this.indexeyTesterer } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '150px' }}>Indexey Testerer</button>
                 </div>
                     <div id="results-list">
                         <ResultList results={ this.state.results } />

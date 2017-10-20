@@ -15,6 +15,16 @@ server.use('*', cors({ origin: 'http://localhost:3000' }));
 server.use(bodyParser.json({limit: '100mb'}));
 server.use(bodyParser.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }));
 
+server.post('/stats', function(req, res, next) {
+    MongoClient.connect(url).then(function(db) {
+        let collection = db.collection('gene_indexes');
+        // collection.storageSize(function(err, result) {
+        //     console.log(result);
+        //     res.send(result);
+        // })
+    })
+});
+
 server.post('/vectors', function(req, res, next) {
     MongoClient.connect(url).then(function(db) {
         let collection = db.collection('annotations');
