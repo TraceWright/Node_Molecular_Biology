@@ -29,7 +29,7 @@ server.post('/vectors', function(req, res, next) {
                         let posComplement = data[i][j].posComplement[k];
                         sem.take(function() {
                             collection.find({organism: data[i][j].organism, sPos: {$lt:pos}, ePos:{$gt:pos}},
-                                {_id:1, strand:1, strand:1, sPos:1, ePos:1, product:1, organism:1}).toArray(function(err, result) {
+                                {_id:1, strand:1, strand:1, sPos:1, ePos:1, product:1, organism:1}).toArray(function(err, result) { // this callback function creates the query below, therefore the function below isn't created until the results of this function are returned
                                 if (result[0] === undefined) {
                                     data[i][j].pos[k] = [pos, {}]
                                 }
@@ -44,7 +44,7 @@ server.post('/vectors', function(req, res, next) {
                                         else {
                                             data[i][j].posComplement[k] = [posComplement, result_comp[0]]
                                         }
-                                sem.leave();
+                                        sem.leave();
                                 });
                             });
                         });

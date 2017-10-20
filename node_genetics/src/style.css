@@ -5,7 +5,7 @@
       rgba(255, 255, 255, 0.50)),
       url("genetics_background_2.png");
     background-position: cover;
-  }
+}
 
 .seq-up {
     grid-area: sequp;
@@ -24,6 +24,7 @@
     grid-gap: 10px;
     margin: auto;
     width: 1500px;
+    height: 100px;
     grid-template-columns: 50% 50%;
     grid-template-areas:
     'sequp ann'
@@ -70,8 +71,8 @@
   border: 3px solid #f3f3f3; /* Light grey */
   border-top: 3px solid #3497DB; /* Blue */
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   animation: spin 2s linear infinite;
 }
   
@@ -87,4 +88,11 @@
   width: 500px; 
   word-break: break-all; 
   word-wrap: break-word;
+}
+
+.results {
+  text-align: left; 
+  width: 1200px;
+  margin: auto;
+  padding-left: 100px;
 }

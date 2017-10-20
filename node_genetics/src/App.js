@@ -54,7 +54,7 @@ function calculateIDF(vectors, kmer) {
 function endSearchTime() {
     document.getElementById('search-timer').style.display = 'grid';
     let searchTimeEnd = Date.now();
-    this.setState({ searchTime:  searchTimeEnd - this.state.searchTimeStart});
+    this.setState({ searchTime:  (searchTimeEnd - this.state.searchTimeStart).toFixed(2) * 0.1});
 }
 
 function initVectors(queryTokens, uninvertedList, organisms, seqLen) {
@@ -572,6 +572,13 @@ class App extends Component {
         for (var i = 0; i < list.length; i++) {
             list[i].style.display='';
         }
+        document.getElementById('show-gene-prod').style.display = 'none';
+        document.getElementById('hide-gene-prod').style.display = '';
+    }
+
+    hideGeneProducts() {
+        document.getElementById('show-gene-prod').style.display = '';
+        document.getElementById('hide-gene-prod').style.display = 'none';
     }
 
     hideEval() {
@@ -624,8 +631,8 @@ class App extends Component {
     render() {
       return (
           <div style={{ textAlign: 'center' }}>
-            <div style={{display: 'inlineBlock'}} className="background">
-                <div className="upload-back">
+            <div className="node-genetics-app" style={{display: 'inlineBlock'}} className="background">
+                <div className="upload-back" style={{ height: '60px'}}>
                   <button  className='buttn' id="upload-files-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px' }} onClick={ this.uploadFilesPage }>Upload File/s</button>
                   <button className='buttn' id="back-btn" style={{ float: 'left', marginTop: '20px', marginLeft: '20px', display: 'none' }} onClick={ this.back }>Back</button>
                 </div>
@@ -680,12 +687,15 @@ class App extends Component {
                     </div>
                 </div>
 
-                <div id="results" className="results" style={{textAlign: 'left', width: '1100px', margin: 'auto'}}>
+                <div id="results" className="results">
                 <h2 className="heading">Results</h2>
-                    <button className='buttn' onClick={ this.onPrint } style={{ marginBottom: '40px', marginTop: '20px', width: '70px' }}>Print</button>
+                <div style ={{ height: '80px'}}>
+                    <button className='buttn' onClick={ this.onPrint } style={{ marginBottom: '40px', marginTop: '20px', width: '200px' }}>Print Results to PDF</button>
+                    <button id="show-gene-prod" className='buttn' onClick={ this.showGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px' }}>Show Gene Products</button>
+                    <button id="hide-gene-prod" className='buttn' onClick={ this.hideGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px', display: 'none' }}>Hide Gene Products</button>
                     <button id="eval" className='buttn' onClick={ this.evaluateResults } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '150px' }}>Evaluate Results</button>
                     <button id="hide-eval" className='buttn' onClick={ this.hideEval } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '150px' }}>Hide Evaluation</button>
-                    <button className='buttn' onClick={ this.showGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px' }}>Show Gene Products</button>
+                </div>
                     <div id="results-list">
                         <ResultList results={ this.state.results } />
                     </div>
