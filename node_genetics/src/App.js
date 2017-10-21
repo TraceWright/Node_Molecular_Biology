@@ -7,7 +7,7 @@ import * as dna from 'dna';
 const Stopwatch = require("node-stopwatch").Stopwatch;
 const Client = require('node-rest-client').Client;
 const pdfConverter = require('jspdf');
-
+let semaphore = require('semaphore');
 let indexStopwatch = Stopwatch.create();
 
 function matchesKmer(element, index, array){
@@ -263,7 +263,7 @@ class App extends Component {
             results: [],
             an: [],
             reverseComplement: [],
-            kmerLength: 10 
+            kmerLength: 7 
         }
 
         endSearchTime = endSearchTime.bind(this);
@@ -283,6 +283,8 @@ class App extends Component {
         this.createRotations = this.createRotations.bind(this);
         this.handleChange = this.handleChange.bind(this); 
         this.saveSequence = this.saveSequence.bind(this);
+        this.htmlDbMethod = this.htmlDbMethod.bind(this);
+        this.createHTMLIndex = this.createHTMLIndex.bind(this);
     }
 
     handleChange({ target }) {
@@ -538,6 +540,15 @@ class App extends Component {
         return { genesProducts, organisms };
     }
 
+    htmlDbMethod() {
+        let db = openDatabase('node_genetics', '1.0', 'Kmer Indexing', 2 * 1024 * 1024);
+        db.transaction(function (tx) { 
+            tx.executeSql('DROP TABLE IF EXISTS NODE_GENETICS'); 
+            tx.executeSql('CREATE TABLE IF NOT EXISTS NODE_GENETICS (kmer, doc, tf, pos)');
+        });
+        this.createIndexSpinner(db);
+    }
+
     // processSequences(sequenceArray, sequenceLengths, ant, revComp) {
     //     let indexTimes = { minutes: 0, seconds: 0 };
     //     for (let i = 0; i < sequenceArray.length; i++) {
@@ -550,28 +561,98 @@ class App extends Component {
     //     return indexTimes;
     // }
 
-    processSequences(sequenceArray, sequenceLengths, ant, revComp) {
+      // db.transaction(function (tx) {  
+        //     tx.executeSql('CREATE TABLE IF NOT EXISTS LOGS (id unique, log)');
+        //     tx.executeSql('INSERT INTO LOGS (id, log) VALUES (1, "foobar")');
+        //     tx.executeSql('INSERT INTO LOGS (id, log) VALUES (2, "logmsg")');
+        //  });
+
+        //  db.transaction(function (tx) {
+        //     tx.executeSql('SELECT * FROM LOGS', [], function (tx, results) {
+        //        var len = results.rows.length, i;
+        //        msg = "<p>Found rows: " + len + "</p>";
+        //        document.querySelector('#status').innerHTML +=  msg;
+             
+        //        for (i = 0; i < len; i++){
+        //           alert(results.rows.item(i).log );
+        //        }
+             
+        //     }, null);
+        //  });
+
+    createHTMLIndex(db, ra, i_main, arrayLength, sequenceLengths, organisms, revComp) {
+            let strand = '';
+            revComp === true ? strand = 'c': strand = 't';
+            indexStopwatch.start();
+            let queryLength = ra.length;
+            let positionStart;
+
+            // check if kmer is already in database
+
+           
+
+            // if in database, update
+
+            // else, insert
+
+        let sem = semaphore(1);
+
+        db.transaction(function (tx) {
+            ra.map(function(ra_element) {
+                ra_element.map(function(token, i) {
+                        positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
+                        (function(ktoken, posStart){
+                            tx.executeSql('SELECT * FROM NODE_GENETICS WHERE kmer = (?) AND doc = (?)', [ktoken, i_main], function (tx, results) {
+                                if (results.rows.length === 0) {
+                                    tx.executeSql('INSERT INTO NODE_GENETICS (kmer, doc, tf, pos) VALUES (?, ?, ?, ?)', [ktoken, i_main, 1, JSON.stringify([[posStart, strand]])]); //, function(err) {console.log(err)}); 
+                                } else {
+                                    if(results.rows.length > 1){ console.log("WAAAAAAAAAA....."); return;}
+                                    let tf = results.rows[0].tf + 1;
+                                    let a = JSON.parse(results.rows[0].pos)
+                                    a.push([posStart, strand]);
+                                    let pos = JSON.stringify(a);
+
+                                    tx.executeSql('UPDATE NODE_GENETICS SET tf = ?, pos = ? WHERE kmer = (?) AND doc = (?)', [tf, pos, ktoken, i_main]);
+                                }  
+                            }, null)
+                    })(token, positionStart);
+                });
+            });
+        });
+            // i_main === arrayLength - 1 && revComp === true ? index.push({ organisms: organisms, sequence_count: arrayLength }): null;
+            indexStopwatch.stop();
+            let minutes = Math.floor(indexStopwatch.elapsed.minutes);
+            let seconds = indexStopwatch.elapsed.seconds % 60; 
+            // this.setState({ indexes: index });
+            return { minutes, seconds }   
+    }
+
+    processSequences(db, sequenceArray, sequenceLengths, ant, revComp) {
         let indexTimes = { minutes: 0, seconds: 0 };
+        let timer;
         for (let i = 0; i < sequenceArray.length; i++) {
-          let ta = this.tokeniseSequence(sequenceArray[i]);
-          let ra = this.createRotations(ta);
-          let timer = this.createIndex(ra, i, sequenceArray.length, sequenceLengths, ant.organisms, revComp); // sets index in state and returns indexStopwatch result
-          indexTimes.minutes += timer.minutes;
-          indexTimes.seconds += timer.seconds;
+            let ta = this.tokeniseSequence(sequenceArray[i]);
+            let ra = this.createRotations(ta);
+            // if (db) {
+            //     timer = this.createHTMLIndex(db, ra, i, sequenceArray.length, sequenceLengths, ant.organisms, revComp);
+            // } else {
+                timer = this.createIndex(ra, i, sequenceArray.length, sequenceLengths, ant.organisms, revComp); // sets index in state and returns indexStopwatch result
+            // }
+
+            indexTimes.minutes += timer.minutes;
+            indexTimes.seconds += timer.seconds;
         }
         return indexTimes;
     }
-
-
         
-    indexMain() {
+    indexMain(db) {
         let ant = this.processAnnotations(this.state.annotations);
         this.postAnnotations(ant.genesProducts);
         let sa = this.state.sequences;
         let rcsa = this.state.reverseComplement;
         let sequenceLengths = this.getSequenceLengths(sa);
-        let indexTimesTemplate = this.processSequences(sa, rcsa, sequenceLengths, ant, false);
-        let indexTimesComplementary = this.processSequences(rcsa, sequenceLengths, ant, true);
+        let indexTimesTemplate = this.processSequences(db, sa, sequenceLengths, ant, false);
+        let indexTimesComplementary = this.processSequences(db, rcsa, sequenceLengths, ant, true);
         let indexTimes = this.addTimes(indexTimesTemplate, indexTimesComplementary);
         this.setState({ indexTime: indexTimes });
         let tempArray = this.state.indexes;
@@ -582,11 +663,11 @@ class App extends Component {
         document.getElementById('loader').style.display = 'none'; 
     }
 
-    createIndexSpinner() {
+    createIndexSpinner(db = null) {
         // this.getPerformanceStats();
         document.getElementById('loader').style.display = '';
         // Give the display some time to update before doing the main workload
-        setTimeout(this.indexMain, 500);
+        setTimeout(this.indexMain.bind(this, db), 500);
     }
 
     showGeneProducts() {
@@ -734,7 +815,7 @@ class App extends Component {
                     <button id="hide-gene-prod" className='buttn' onClick={ this.hideGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px', display: 'none' }}>Hide Gene Products</button>
                     <button id="eval" className='buttn' onClick={ this.evaluateResults } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '150px' }}>Evaluate Results</button>
                     <button id="hide-eval" className='buttn' onClick={ this.hideEval } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '150px' }}>Hide Evaluation</button>
-                    <button id="test" className='buttn' onClick={ this.indexeyTesterer } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '150px' }}>Indexey Testerer</button>
+                    <button id="test" className='buttn' onClick={ this.htmlDbMethod } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '150px' }}>Indexey Testerer</button>
                 </div>
                     <div id="results-list">
                         <ResultList results={ this.state.results } />
