@@ -9,6 +9,7 @@ const Client = require('node-rest-client').Client;
 const pdfConverter = require('jspdf');
 let semaphore = require('semaphore');
 let indexStopwatch = Stopwatch.create();
+const Pool = require('threads').Pool;
 
 function matchesKmer(element, index, array){
     if (element.k === this) {
@@ -286,7 +287,7 @@ class App extends Component {
         this.postData = this.postData.bind(this);        
         this.indexMain = this.indexMain.bind(this);   
         this.createIndexSpinner = this.createIndexSpinner.bind(this);  
-        this.createIndex = this.createIndex.bind(this);
+        // this.createIndex = this.createIndex.bind(this);
         this.tokeniseSequence = this.tokeniseSequence.bind(this);
         this.createRotations = this.createRotations.bind(this);
         this.handleChange = this.handleChange.bind(this); 
@@ -437,42 +438,42 @@ class App extends Component {
         return { minutes: minutes, seconds: seconds };
     }
       
-    createIndex(ra, i_main, arrayLength, sequenceLengths, organisms, revComp) {
-        let strand = '';
-        revComp === true ? strand = 'c': strand = 't';
-        indexStopwatch.start();
-        let queryLength = ra.length;
-        let positionStart;
-        let index = this.state.indexes;
-        for (let j = 0; j < ra.length; j++) {
-            for (let i = 0; i < ra[j].length; i++) {
-                positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
-                let exists = index.findIndex(matchesKmer, ra[j][i]);
-                if (exists < 1) {
-                    index.push( { k: ra[j][i], d: [[i_main, 1 , [[positionStart, strand]]]] }) 
-                } else {
-                    let match = -1;
-                    for (let l = 0; l < index[exists].d.length; l++) {
-                        if (i_main === index[exists].d[l][0]) {
-                            match = l;
-                        }
-                    }
-                    if (match < 0) {
-                        index[exists].d.push([i_main, 1, [[positionStart, strand]] ]);                   
-                    } else {
-                        index[exists].d[match][1] += 1;
-                        index[exists].d[match][2].push([positionStart, strand]); 
-                    }    
-                }  
-            }    
-        }
-        i_main === arrayLength - 1 && revComp === true ? index.push({ organisms: organisms, sequence_count: arrayLength }): null;
-        indexStopwatch.stop();
-        let minutes = Math.floor(indexStopwatch.elapsed.minutes);
-        let seconds = indexStopwatch.elapsed.seconds % 60; 
-        this.setState({ indexes: index });
-        return { minutes, seconds }          
-    }
+    // createIndex(ra, i_main, arrayLength, sequenceLengths, organisms, revComp) {
+    //     let strand = '';
+    //     revComp === true ? strand = 'c': strand = 't';
+    //     indexStopwatch.start();
+    //     let queryLength = ra.length;
+    //     let positionStart;
+    //     let index = this.state.indexes;
+    //     for (let j = 0; j < ra.length; j++) {
+    //         for (let i = 0; i < ra[j].length; i++) {
+    //             positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
+    //             let exists = index.findIndex(matchesKmer, ra[j][i]);
+    //             if (exists < 1) {
+    //                 index.push( { k: ra[j][i], d: [[i_main, 1 , [[positionStart, strand]]]] }) 
+    //             } else {
+    //                 let match = -1;
+    //                 for (let l = 0; l < index[exists].d.length; l++) {
+    //                     if (i_main === index[exists].d[l][0]) {
+    //                         match = l;
+    //                     }
+    //                 }
+    //                 if (match < 0) {
+    //                     index[exists].d.push([i_main, 1, [[positionStart, strand]] ]);                   
+    //                 } else {
+    //                     index[exists].d[match][1] += 1;
+    //                     index[exists].d[match][2].push([positionStart, strand]); 
+    //                 }    
+    //             }  
+    //         }    
+    //     }
+    //     i_main === arrayLength - 1 && revComp === true ? index.push({ organisms: organisms, sequence_count: arrayLength }): null;
+    //     indexStopwatch.stop();
+    //     let minutes = Math.floor(indexStopwatch.elapsed.minutes);
+    //     let seconds = indexStopwatch.elapsed.seconds % 60; 
+    //     // this.setState({ indexes: index });
+    //     return { index: index, time: { minutes, seconds} };       
+    // }
 
     createRotations(seqArr) {
         let prev = '';
@@ -634,20 +635,91 @@ class App extends Component {
     }
 
     processSequences(db, sequenceArray, sequenceLengths, ant, revComp) {
-        let indexTimes = { minutes: 0, seconds: 0 };
-        let timer;
+        const pool = new Pool();
         for (let i = 0; i < sequenceArray.length; i++) {
             let ta = this.tokeniseSequence(sequenceArray[i]);
             let ra = this.createRotations(ta);
-            // if (db) {
-            //     timer = this.createHTMLIndex(db, ra, i, sequenceArray.length, sequenceLengths, ant.organisms, revComp);
-            // } else {
-                timer = this.createIndex(ra, i, sequenceArray.length, sequenceLengths, ant.organisms, revComp); // sets index in state and returns indexStopwatch result
-            // }
 
-            indexTimes.minutes += timer.minutes;
-            indexTimes.seconds += timer.seconds;
+            // const jobC = pool.run(
+            //     function(input, done) {
+                 
+            //       done('string', input);
+               
+            //       // dependencies; resolved using node's require() or the web workers importScript() 
+            //     }
+            //   ).send('Hash this string!');
+            
+            const poolJob = pool.run(
+                function(input, done) {
+                    let indexTimes = { minutes: 0, seconds: 0 };
+                    // createIndex(ra, i_main, arrayLength, sequenceLengths, organisms, revComp) {
+                        // input.ra, input.i, input.sequenceArray, input.sequenceLengths, input.ant, input.revComp
+                        let strand = '';
+                        let ra = input.ra;
+                        let i_main = input.i;
+                        let arrayLength = input.sequenceArray;
+                        let sequenceLengths = input.sequenceLengths;
+                        let organisms = input.ant;
+                        let revComp = input.revComp;
+                        revComp === true ? strand = 'c': strand = 't';
+                        // indexStopwatch.start();
+
+                        let queryLength = ra.length;
+                        let positionStart;
+                        let index = [];
+                        for (let j = 0; j < ra.length; j++) {
+                            for (let i = 0; i < ra[j].length; i++) {
+                                positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
+                                // let exists = index.findIndex(matchesKmer, ra[j][i]);
+                                let exists = index.findIndex( function(element, index, array) {
+                                        if (element.k === this) {
+                                        return index;
+                                    }
+                                }, ra[j][i]);
+                                if (exists < 1) {
+                                    index.push( { k: ra[j][i], d: [[i_main, 1 , [[positionStart, strand]]]] }) 
+                                } else {
+                                    let match = -1;
+                                    for (let l = 0; l < index[exists].d.length; l++) {
+                                        if (i_main === index[exists].d[l][0]) {
+                                            match = l;
+                                        }
+                                    }
+                                    if (match < 0) {
+                                        index[exists].d.push([i_main, 1, [[positionStart, strand]] ]);                   
+                                    } else {
+                                        index[exists].d[match][1] += 1;
+                                        index[exists].d[match][2].push([positionStart, strand]); 
+                                    }    
+                                }  
+                            }    
+                        }
+                        // i_main === arrayLength - 1 && revComp === true ? index.push({ organisms: organisms, sequence_count: arrayLength }): null;
+
+                        // indexStopwatch.stop();
+                        // let minutes = Math.floor(indexStopwatch.elapsed.minutes);
+                        // let seconds = indexStopwatch.elapsed.seconds % 60; 
+                        // return { index: index, time: { minutes, seconds} };       
+                    // }
+                    // let results = 'text'; //input.createIndex(input.ra, input.i, input.sequenceArray, input.sequenceLengths, input.ant, input.revComp); // sets index in state and returns indexStopwatch result
+                    // indexTimes.minutes += results.time.minutes;
+                    // indexTimes.seconds += results.time.seconds;
+                    done({ index: index , time: indexTimes}, input);
+                }).send({ ra: ra, i: i, sequenceArray: sequenceArray.length, sequenceLengths:sequenceLengths, ant: ant.organisms, revComp:revComp});
         }
+        let indexTimes = { minutes: 0, seconds: 0 };
+        pool
+        .on('done', function(job, message) {
+          console.log('Job done:', message);
+          console.log(message.index);
+        })
+        .on('error', function(job, error) {
+          console.error('Job errored:', job);
+        })
+        .on('finished', function() {
+          console.log('Everything done, shutting down the thread pool.');
+          pool.killAll();
+        });
         return indexTimes;
     }
         
