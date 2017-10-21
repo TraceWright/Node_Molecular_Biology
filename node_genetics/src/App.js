@@ -162,15 +162,23 @@ function matchProductsToPositions(vectors) {
 }
 
 // workaround: 'this' was not available inside client
-function rankResults(results, seqLen, organisms) {
+function rankResults(results) {
+    let queryResults = [];
     endSearchTime();
-    let uninvertedList = uninvertList(results, organisms);
-    let sortedPositions = sortPositions(uninvertedList);
-    let queryTokens = this.tokeniseQuery(this.state.querySeq);
-    let vectors = initVectors(queryTokens, sortedPositions, organisms, seqLen);
-    let vectorsWithStats = getStats(vectors, seqLen);
-    let vectorsWithCosSim = calculateCosineSimilarity(vectorsWithStats);
-    let sortedListRanks = sortResultRanks(vectorsWithCosSim);
+    results.forEach(function(element) {
+        let organisms = element.pop();
+        let seqLen = element.pop();
+        if (element.length > 0) {
+            let uninvertedList = uninvertList(element, organisms);
+            let sortedPositions = sortPositions(uninvertedList);
+            let queryTokens = this.tokeniseQuery(this.state.querySeq);
+            let vectors = initVectors(queryTokens, sortedPositions, organisms, seqLen);
+            let vectorsWithStats = getStats(vectors, seqLen);
+            let vectorsWithCosSim = calculateCosineSimilarity(vectorsWithStats);
+            queryResults.push(vectorsWithCosSim[0]);
+        }
+    }, this);
+    let sortedListRanks = sortResultRanks(queryResults);
     let vectorsWithCosSimAnn = matchProductsToPositions(sortedListRanks);
 }
 
@@ -360,9 +368,7 @@ class App extends Component {
         };
         client.post("http://localhost:4000/query", args, function (data, response) {
           results = JSON.parse(data.toString());
-          let organisms = results.pop();
-          let seqLen = results.pop();
-          rankResults(results, seqLen, organisms);
+          rankResults(results);
           // uninvertList(results);
         });     
     }

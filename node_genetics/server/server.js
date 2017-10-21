@@ -66,7 +66,7 @@ server.post('/vectors', function(req, res, next) {
             if(sem.available() == false) {
                 setTimeout(function() {
                     timeout();
-                },50)
+                },200)
             } else {
                 res.send(data);
             }
@@ -98,13 +98,13 @@ server.post('/annotations', function(req, res, next) {
 server.post('/index', function(req, res, next) {
     
     let data = JSON.parse(req.body.data);
-    //console.log(data);
-
+    let organism = Buffer.from(data[data.length - 2].organisms[0]).toString('base64');
+    console.log(organism);
     // Use connect method to connect to the Server 
     MongoClient.connect(url, function(err, db) {
         assert.equal(null, err);
         console.log("Connected correctly to server");
-        let collection = db.collection('gene_indexes');
+        let collection = db.collection(`kmers_${organism}`);
         //db.<collection(like a table)>('<tableName>');
         collection.insertMany(data, function(err, result) {
             assert.equal(err, null);
@@ -115,27 +115,67 @@ server.post('/index', function(req, res, next) {
     });
 });
 
-
 server.post('/query', function(req, res, next) {    
     MongoClient.connect(url, function(err, db) { 
         assert.equal(null, err);
-        let collection = db.collection('gene_indexes');
-        console.log(req.body.data);
-        collection.find({k: { $in: req.body.data }},{_id: 0, k:1, d:1, strand:1}).toArray(function(err, result) {
-            assert.equal(err, null);
-            console.log("Found the following records");
-            console.log(result);
-            collection.findOne({'seqLen':{$ne:null}},{_id: 0, seqLen:1}, function(err, seqLen) {
-                assert.equal(err, null);
-                result.push(seqLen);
-                collection.findOne({'organisms': {$ne:null}},{_id: 0, organisms:1}, function(err, org) {
-                    assert.equal(err, null);
-                    result.push(org);
-                    res.send(JSON.stringify(result));
-                    db.close();
-                }); 
+
+        db.listCollections().toArray(function(err, collInfos) {
+            let kmer_matches = [];
+            let sem = semaphore(1);
+            collInfos.forEach(function(element) {
+                if (element.name.indexOf("kmers_") != -1) {
+                    // kmer_collection.push(element);
+                    sem.take(function() {
+                        let collection = db.collection(element.name);
+                        console.log(req.body.data);
+                        collection.find({k: { $in: req.body.data }},{_id: 0, k:1, d:1, strand:1}).toArray(function(err, result) {
+                            assert.equal(err, null);
+                            console.log("Found the following records");
+                            console.log(result);
+                            collection.findOne({'seqLen':{$ne:null}},{_id: 0, seqLen:1}, function(err, seqLen) {
+                                assert.equal(err, null);
+                                result.push(seqLen);
+                                collection.findOne({'organisms': {$ne:null}},{_id: 0, organisms:1}, function(err, org) {
+                                    assert.equal(err, null);
+                                    result.push(org);
+                                    kmer_matches.push(result);
+                                    // res.send(JSON.stringify(result));
+                                    sem.leave();
+                                }); 
+                            });
+                        });       
+                    });
+                }
             });
+            let timeout = function() {
+                if(sem.available() == false) {
+                    setTimeout(function() {
+                        timeout();
+                    },200)
+                } else {
+                    res.send(JSON.stringify(kmer_matches));
+                }
+            };
+            timeout();
         });
+             
+        // let collection = db.collection('gene_indexes');
+        // console.log(req.body.data);
+        // collection.find({k: { $in: req.body.data }},{_id: 0, k:1, d:1, strand:1}).toArray(function(err, result) {
+        //     assert.equal(err, null);
+        //     console.log("Found the following records");
+        //     console.log(result);
+        //     collection.findOne({'seqLen':{$ne:null}},{_id: 0, seqLen:1}, function(err, seqLen) {
+        //         assert.equal(err, null);
+        //         result.push(seqLen);
+        //         collection.findOne({'organisms': {$ne:null}},{_id: 0, organisms:1}, function(err, org) {
+        //             assert.equal(err, null);
+        //             result.push(org);
+        //             res.send(JSON.stringify(result));
+        //             db.close();
+        //         }); 
+        //     });
+        // });
     });
 });
 
