@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import * as dna from 'dna';
 //import { Pool } from 'pg';
 let bodyParser = require('body-parser');
 let semaphore = require('semaphore');
@@ -29,6 +30,7 @@ server.post('/vectors', function(req, res, next) {
     MongoClient.connect(url).then(function(db) {
         let collection = db.collection('annotations');
         let data = JSON.parse(req.body.data);
+        console.log(data);
         let sem = semaphore(1);
 
         for (let i = 0; i < data.length; i++) { 
@@ -68,6 +70,7 @@ server.post('/vectors', function(req, res, next) {
                     timeout();
                 },200)
             } else {
+                console.log(data);
                 res.send(data);
             }
         };
@@ -95,17 +98,130 @@ server.post('/annotations', function(req, res, next) {
     });
 });
 
+
+// server.use(function (req, res, next) {
+//     getRawBody(req, {
+//       length: req.headers['content-length'],
+//       limit: '100mb',
+//       encoding: contentType.parse(req).parameters.charset
+//     }, function (err, string) {
+//       if (err) return next(err)
+//       req.text = string
+//       next()
+//     })
+//   })
+
+function tokeniseSequence(s, len) {
+    let tok = s.replace('/,/g' , '');
+    let regex = new RegExp(`.{1,${len}}`, "g");
+    let tokArray = tok.match(regex);
+    // let tokArray = tok.match(/.{1,7}/g);
+    return tokArray;
+}
+
+function createRotations(seqArr) {
+    let prev = '';
+    let rotationArr = [];
+    let ql = seqArr[0].length;
+
+    rotationArr[0] = seqArr;
+    for (let i = 1; i < ql; i++) {
+        rotationArr[i] = [];
+        prev = '';
+        for (let j = 0; j < seqArr.length - 1; j++) {
+            let current = seqArr[j].slice(0, ql-i);
+            rotationArr[i][j] = `${prev}${current}`
+            prev = seqArr[j].slice(ql-i, ql);
+          }      
+        }
+    return rotationArr;
+}
+
+function createComplementStrand(sequence) {
+    let complement = dna.complStrand(sequence, true);
+    return complement;
+}
+
+function processSequences(templateSequence, revCompSequence, sequenceLength, ant, kmerLength) {
+    let sequenceArray = [];
+    sequenceArray.push(templateSequence, revCompSequence);
+    let strand = '';        
+    let revComp;
+    let cra = {};
+
+    for (let i = 0; i < 2; i++) {
+        let ta = tokeniseSequence(sequenceArray[i], kmerLength);
+        let r = createRotations(ta);
+        i === 0 ? strand = 't': strand = 'c';
+        cra[strand] = r;
+    }
+
+                let index = {};
+                let i_main = 0;  // artifact from methods which process multiple documents into 1 index
+
+                for (strand in cra) {
+                    let ra = cra[strand];
+
+                    let queryLength = ra.length;
+                    let positionStart;
+                    
+                    for (let j = 0; j < ra.length; j++) {
+                        for (let i = 0; i < ra[j].length; i++) {
+                            positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
+                            if (!index.hasOwnProperty(ra[j][i])) {
+                                index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
+                            } else {
+                                let match = -1;
+                                for (let l = 0; l < index[ra[j][i]].length; l++) {
+                                    if (i_main === index[ra[j][i]][l][0]) {
+                                        match = l;
+                                    }
+                                }
+                                if (match < 0) {
+                                    index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
+                                } else {
+                                    index[ra[j][i]][match][1] += 1;
+                                    index[ra[j][i]][match][2].push([positionStart, strand]); 
+                                }    
+                            }  
+                        }
+                    }
+                }
+            return index;
+        }
+
 server.post('/index', function(req, res, next) {
-    let data = JSON.parse(req.body.data);
-    let organism = Buffer.from(data[data.length - 2].organisms).toString('base64');
+    let sa = req.body.sequence;
+    let organism = req.body.organism;
+    let kmerLength = req.body.kmerLength;
     console.log(organism);
+    let rcsa = createComplementStrand(sa);
+    let sequenceLength = sa.length;
+    let index = processSequences(sa, rcsa, sequenceLength, organism, kmerLength); 
+    let newIndex = [];      
+    
+     for (let kmer in index) {
+                newIndex.push({ k: kmer, d: index[kmer] });
+            }
+            console.log("woooo we're half way there");
+            newIndex.push({ organisms: organism });
+            newIndex.push({ seqLen: sequenceLength });
+            console.log('Sending..');
+
+    organism = Buffer.from(organism).toString('base64');
+    console.log('newIndex');
+    console.log(newIndex);
+    
+    console.log('organism');
+    console.log(organism);
+    
     // Use connect method to connect to the Server 
     MongoClient.connect(url, function(err, db) {
         assert.equal(null, err);
         console.log("Connected correctly to server");
         let collection = db.collection(`kmers_${organism}`);
         //db.<collection(like a table)>('<tableName>');
-        collection.insertMany(data, function(err, result) {
+        collection.insertMany(newIndex, function(err, result) {
             assert.equal(err, null);
             console.log("Updated the document");
             db.close();
@@ -179,11 +295,12 @@ server.post('/query', function(req, res, next) {
 });
 
 server.post('/cleardb', function(req, res, next) {
-    MongoClient.connect(url, function(err, db) { 
-        assert.equal(null, err);
+    MongoClient.connect(url, function(err, db) {
+        assert.equal(null, err);      
         db.listCollections().toArray(function(err, collInfos) {
             collInfos.forEach(function(element) {
                 db.collection(element.name).drop()
+                console.log(element.name + ' dropped')
             });
             // db.close();
         });

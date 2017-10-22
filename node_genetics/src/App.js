@@ -7,6 +7,7 @@ import * as dna from 'dna';
 const Stopwatch = require("node-stopwatch").Stopwatch;
 const Client = require('node-rest-client').Client;
 const pdfConverter = require('jspdf');
+const msgpack = require('msgpack5')();
 let semaphore = require('semaphore');
 let indexStopwatch = Stopwatch.create();
 const Pool = require('threads').Pool;
@@ -89,7 +90,7 @@ function getStats(vectors, seqLen) {
         for (let j = 0; j < vectors[i].length - 1; j++) {
             let idf = calculateIDF(vectors, vectors[i][j]);
             let tf = vectors[i][j].tf;
-            let normTF = normaliseTF(tf, seqLen.seqLen[i]);
+            let normTF = normaliseTF(tf, seqLen.seqLen);
             vectors[i][j].tf = [tf, normTF];
             let tfidf = calculateTFIDF(vectors[i][j].tf[1], idf);
             vectors[i][j].tfidf = tfidf;
@@ -186,9 +187,8 @@ function rankResults(results) {
 // workaround: 'this' was not available inside client
 function uninvertList(results, organisms) {
     let uninvertedList = [];
-    for (let i = 0; i < organisms.organisms.length; i++) {
-        uninvertedList.push([i]);
-    }
+    uninvertedList.push([0]);
+    
     if (results.length > 0) {
         results.forEach(function(element) {
 
@@ -653,7 +653,7 @@ class App extends Component {
             
             const poolJob = pool.run(
                 function(input, done, progress) {
-                    let index = [];
+                    let index = {};
                     let indexTimes = { minutes: 0, seconds: 0 };
 
                     let cra = input.ra;
@@ -662,47 +662,43 @@ class App extends Component {
                     let sequenceLengths = input.sequenceLength;
                     let organisms = input.ant;
                     let strand = '';
-                    
+                    let loopProgress = 0;
+
                     for (strand in cra) {
                         let ra = cra[strand];
 
                         let queryLength = ra.length;
                         let positionStart;
-                    
+                        
                         for (let j = 0; j < ra.length; j++) {
                             for (let i = 0; i < ra[j].length; i++) {
                                 positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
-                                let exists = index.findIndex( function(element, index, array) {
-                                        if (element.k === this) {
-                                        return index;
-                                    }
-                                }, ra[j][i]);
-                                if (exists < 1) {
-                                    index.push( { k: ra[j][i], d: [[i_main, 1 , [[positionStart, strand]]]] }) 
+                                if (!index.hasOwnProperty(ra[j][i])) {
+                                    index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
                                 } else {
                                     let match = -1;
-                                    for (let l = 0; l < index[exists].d.length; l++) {
-                                        if (i_main === index[exists].d[l][0]) {
+                                    for (let l = 0; l < index[ra[j][i]].length; l++) {
+                                        if (i_main === index[ra[j][i]][l][0]) {
                                             match = l;
                                         }
                                     }
                                     if (match < 0) {
-                                        index[exists].d.push([i_main, 1, [[positionStart, strand]] ]);                   
+                                        index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
                                     } else {
-                                        index[exists].d[match][1] += 1;
-                                        index[exists].d[match][2].push([positionStart, strand]); 
+                                        index[ra[j][i]][match][1] += 1;
+                                        index[ra[j][i]][match][2].push([positionStart, strand]); 
                                     }    
                                 }  
                             }
-                            progress((j/(queryLength-1))*100);   
+                            progress((j + (queryLength-1)*loopProgress)/(queryLength*2-2));
                         }
+                        loopProgress++;
                     }
-                    index.push({ organisms: organisms, sequence_count: arrayLength });
-                    index.push({ seqLen: sequenceLengths })
-                    done({ index: index , time: indexTimes}, input);
+                    done({ index: index , time: indexTimes, organisms: organisms, sequence_count: arrayLength, seqLen: sequenceLengths}, input);
                 }).send({ ra: ra, sequenceArray: sequenceArray.length, sequenceLength: sequenceLength, ant: ant})
                 .on('progress', function(progress) {
-                    console.log(`Progress: ${progress}%`);
+                    console.log(`Progress: ${progress*100}%`);
+                    document.getElementById('indexProgress').value = progress;
                 });
                 
                 // a({ ra: ra, sequenceArray: sequenceArray.length, sequenceLengths:sequenceLengths, ant: ant.organisms});
@@ -717,7 +713,7 @@ class App extends Component {
                     // let results = 'text'; //input.createIndex(input.ra, input.i, input.sequenceArray, input.sequenceLengths, input.ant, input.revComp); // sets index in state and returns indexStopwatch result
                     // indexTimes.minutes += results.time.minutes;
                     // indexTimes.seconds += results.time.seconds;
-       // return indexTimes;
+        // return indexTimes;
     }
         
     indexMain(db) {
@@ -726,35 +722,64 @@ class App extends Component {
         let sa = this.state.sequences;
         let rcsa = this.state.reverseComplement;
         let sequenceLengths = this.getSequenceLengths(sa);
-        const pool = new Pool();
-        pool
-        .on('done', function(job, message) {
-          console.log('Job done:', message);
-        //   console.log(message.index);
-          let jsonIndex = JSON.stringify(message.index);
-          console.log('jsonIndex')
-        //   console.log(jsonIndex)
-          var client = new Client();
-          var args = {
-            data: { data: jsonIndex },
-            headers: { "Content-Type": "application/json" },
-            //body: jsonIndex
-          };  
-          client.post("http://localhost:4000/index", args, function (data, response) {
-            console.log(response);
-          }); 
-        })
-        .on('error', function(job, error) {
-          console.error('Job errored:', job);
-        })
-        .on('finished', function() {
-          console.log('Everything done, shutting down the thread pool.');
-          pool.killAll();
-          document.getElementById('loader').style.display = 'none'; 
-        });
-        for (let i = 0; i < sa.length; i++) {
-            let indexTimesTemplate = this.processSequences(db, sa[i], rcsa[i], sa[i].length, ant.organisms[i], pool);
-        }
+        // const pool = new Pool();
+        
+            var client = new Client();
+            var args = {
+                data: JSON.stringify({ sequence: sa[0], organism: ant.organisms[0], kmerLength: this.state.kmerLength }),
+                //body: msgpack.encode(newIndex),
+                headers: { "content-type": "application/json" },
+            };
+            client.post("http://localhost:4000/index", args, function (data, response) {
+                console.log(data, response);
+            }); 
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('indexProgress').style.display = 'none';
+
+        // pool
+        // .on('done', function(job, message) {
+        //     console.log('Job done!');
+        //     document.getElementById('indexProgress').value = 0;
+        //     // let newIndex = [];
+        //     // for (let kmer in message.index) {
+        //     //     newIndex.push(msgpack.encode({ k: kmer, d: message.index[kmer] }));
+        //     //     message.index[kmer] = null;
+        //     // }
+        //     // message.index = null;
+        //     document.getElementById('indexProgress').value = 0.5;
+        //     console.log("woooo we're half way there");
+        //     // newIndex.push(msgpack.encode({ organisms: message.organisms, sequence_count: message.arrayLength }));
+        //     // newIndex.push(msgpack.encode({ seqLen: message.sequenceLengths }));
+        //     // message = null;
+        //     console.log('Sending..');
+
+        //     var client = new Client();
+        //     var args = {
+        //         data: JSON.stringify(message.index), //msgpack.encode(newIndex),
+        //         //body: msgpack.encode(newIndex),
+        //         headers: { "content-type": "application/json" },
+        //     };
+        //     document.getElementById('indexProgress').value = 0.8;
+        //     client.post("http://localhost:4000/index", args, function (data, response) {
+        //         console.log(data, response);
+        //     }); 
+        //     document.getElementById('indexProgress').value = 1;
+        // })
+        // .on('error', function(job, error) {
+        //   console.error('Job errored:', job);
+        // })
+        // .on('finished', function() {
+        //   console.log('Everything done, shutting down the thread pool.');
+        //   pool.killAll();
+        //   document.getElementById('loader').style.display = 'none';
+        //   document.getElementById('indexProgress').style.display = 'none';
+        // });
+        // for (let i = 0; i < sa.length; i++) {
+        //     let indexTimesTemplate = this.processSequences(db, sa[i], rcsa[i], sa[i].length, ant.organisms[i], pool);
+        // }
+
+
+
         //let indexTimesComplementary = this.processSequences(db, rcsa, sequenceLengths, ant, true);
         //let indexTimes = this.addTimes(indexTimesTemplate); 
             //indexTimesComplementary);
@@ -770,6 +795,8 @@ class App extends Component {
     createIndexSpinner(db = null) {
         // this.getPerformanceStats();
         document.getElementById('loader').style.display = '';
+        document.getElementById('indexProgress').value = 0;
+        document.getElementById('indexProgress').style.display = '';
         // Give the display some time to update before doing the main workload
         setTimeout(this.indexMain.bind(this, db), 500);
     }
@@ -853,7 +880,7 @@ class App extends Component {
     }
 
     render() {
-      return (
+        return (
           <div style={{ textAlign: 'center' }}>
             <div className="node-genetics-app" style={{display: 'inlineBlock'}} className="background">
                 <div className="upload-back" style={{ height: '60px'}}>
@@ -889,7 +916,8 @@ class App extends Component {
                 <div className="indexing-querying" id="indexing-querying"> 
                     <div className="indexing">
                         <h2 className="heading">Indexing</h2><br/><br/>
-                        <button className='buttn' id="mainBttn" onClick={ this.createIndexSpinner }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button>
+                        <button className='buttn' id="mainBttn" onClick={ this.createIndexSpinner }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button><br/>
+                        <progress id="indexProgress" max="1" value="0" style={{display: 'none'}}></progress>
                         <label style={{ paddingLeft: '40px' }} id="index-timer"></label>
                         <br/><br/><br/>
                         <button className='buttn' id="post-data-button" onClick={ this.postData }>Post Index to Database</button>
