@@ -96,9 +96,8 @@ server.post('/annotations', function(req, res, next) {
 });
 
 server.post('/index', function(req, res, next) {
-    
     let data = JSON.parse(req.body.data);
-    let organism = Buffer.from(data[data.length - 2].organisms[0]).toString('base64');
+    let organism = Buffer.from(data[data.length - 2].organisms).toString('base64');
     console.log(organism);
     // Use connect method to connect to the Server 
     MongoClient.connect(url, function(err, db) {
@@ -182,11 +181,13 @@ server.post('/query', function(req, res, next) {
 server.post('/cleardb', function(req, res, next) {
     MongoClient.connect(url, function(err, db) { 
         assert.equal(null, err);
-        let collection = db.collection('gene_indexes');
-        let annotation = db.collection('annotations')
-        collection.remove({});
-        annotation.remove({});
-        db.close(); 
+        db.listCollections().toArray(function(err, collInfos) {
+            collInfos.forEach(function(element) {
+                db.collection(element.name).drop()
+            });
+            // db.close();
+        });
+
         res.sendStatus(200);
     });
 });
