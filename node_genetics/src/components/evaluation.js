@@ -13,26 +13,30 @@ const Evaluation = (props) => {
         console.log(objArray);
     }
 
-    let names = [];
+    let stats = [];
     let indSiz = Object.keys(props.indexStats).forEach(function(key) {
         // <label>{ props.indexStats[key].name }</label>
-        names.push(props.indexStats[key].name);
-    })
-    console.log(names);
+        let name = props.indexStats[key].name;
+        let totInd = props.indexStats[key].totalIndexSize;
+        stats.push([name, totInd]);
+    });
 
-    const orgInd = names.map((name) => {
-        return <h4>&emsp;&emsp;{ name }</h4>
-    })
+let a = 0;
+    const orgInd = stats.map((stat) => {
+        a++
+        return <div key={a}><label style={{ fontWeight: 'bold' }}>&emsp;&emsp;{ stat[0] }</label><label>:&nbsp;{ Math.round(stat[1]/1024) }&nbsp; kb</label><br/><br/></div>
+    });
 
 
     return (
         <div>
             <h3>Efficiency</h3>
-            <label>Search Time: { props.searchTime } seconds</label><br/>
-            <label id="index-time">Indexing Time: { props.indexTime }</label><br/>
+            <label>Search Time: { props.searchTime } seconds</label><br/><br/>
+            <label id="index-time">Indexing Time: { props.indexTime }</label><br/><br/>
+            <label id="index-stor">Index Sizes: </label><br/><br/>
             {orgInd}
             {/* <label>Index Size: </label>  */}
-            <hr id="line" style={{ width: '400px', float: 'left' }}/><br/>
+            <hr id="line" style={{ width: '500px', float: 'left' }}/><br/>
             <h3>Efficacy</h3> 
         </div>
     );
