@@ -7,7 +7,6 @@ import * as dna from 'dna';
 const Stopwatch = require("node-stopwatch").Stopwatch;
 const Client = require('node-rest-client').Client;
 const pdfConverter = require('jspdf');
-const msgpack = require('msgpack5')();
 let semaphore = require('semaphore');
 let indexStopwatch = Stopwatch.create();
 const Pool = require('threads').Pool;
@@ -68,7 +67,7 @@ function initVectors(queryTokens, uninvertedList, organisms, seqLen) {
         if (uninvertedList[i].length > 1) {
             for (let j = 1; k < queryTokens.length; j++) {
                 if (queryTokens[k] === uninvertedList[i][j].kmer[0]) {
-                    vectors[i].push({ organism: organisms.organisms, seqLength: seqLen.seqLen, kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1], pos: uninvertedList[i][j].kmer[2], posComplement: uninvertedList[i][j].kmer[3] });
+                    vectors[i].push({ organism: organisms.organism, seqLength: seqLen.seqLen, kmer: queryTokens[k], tf: uninvertedList[i][j].kmer[1], pos: uninvertedList[i][j].kmer[2], posComplement: uninvertedList[i][j].kmer[3] });
                     k++
                     k === queryTokens.length ? j = uninvertedList.length : j = 0;
                 } else if (j === uninvertedList[i].length - 1) {
@@ -78,7 +77,7 @@ function initVectors(queryTokens, uninvertedList, organisms, seqLen) {
                 }
             }
         } else {
-            vectors[i].push({ organism: organisms.organisms, seqLength: seqLen.seqLen });
+            vectors[i].push({ organism: organisms.organism, seqLength: seqLen.seqLen });
         }
     }
     return vectors;
@@ -726,7 +725,7 @@ class App extends Component {
         
             var client = new Client();
             var args = {
-                data: JSON.stringify({ sequence: sa[0], organism: ant.organisms[0], kmerLength: this.state.kmerLength }),
+                data: JSON.stringify({ sequence: sa, organism: ant.organisms, kmerLength: this.state.kmerLength }),
                 //body: msgpack.encode(newIndex),
                 headers: { "content-type": "application/json" },
             };
