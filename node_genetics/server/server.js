@@ -18,13 +18,42 @@ server.use(bodyParser.json({limit: '100mb'}));
 server.use(bodyParser.urlencoded({ limit: '100mb', extended: true, parameterLimit:50000 }));
 
 server.post('/stats', function(req, res, next) {
+    let data = {};
+    let sem = semaphore(1);
+    let timeout = function() {
+        if(sem.available() == false) {
+            setTimeout(function() {
+                timeout();
+            },200)
+        } else {
+            console.log('data');
+            console.log(data);
+            res.send(JSON.stringify(data));
+        }
+    };
     MongoClient.connect(url).then(function(db) {
-        let collection = db.collection('gene_indexes');
-        // collection.storageSize(function(err, result) {
-        //     console.log(result);
-        //     res.send(result);
-        // })
-    })
+        db.listCollections().toArray(function(err, collInfos) {
+            collInfos.forEach(function(element) {
+                sem.take(function() {
+                    db.collection(element.name).stats(function(err, result) {
+                        // console.log(result);
+                        console.log(result.totalIndexSize);
+                        console.log(result.indexSizes);
+                        console.log(result.storageSize);
+                        let name;
+                        element.name == 'annotations' ? name = 'Annotations' : name = Buffer(element.name.split(/kmers_[0-9]_/).join(""), 'base64').toString('ascii');
+                        data[element.name] = { storageSize: result.storageSize, indexSizes: result.indexSizes, totalIndexSize: result.totalIndexSize, name: name  };
+                        sem.leave();
+                    })
+                });
+                console.log(element.name + '');
+            });
+            setTimeout(function() {
+                timeout();
+            },200);
+            // db.close();
+        });
+    });
 });
 
 server.post('/vectors', function(req, res, next) {
@@ -101,18 +130,17 @@ server.post('/annotations', function(req, res, next) {
 
 
 server.post('/index', function(req, res, next) {
-    res.sendStatus(200);
     let sa = req.body.sequence;
     let organism = req.body.organism;
     let kmerLength = req.body.kmerLength;
     let rcsa = [];
-
+    
     // create reverse complement strand
     for (let i = 0; i < sa.length; i++) {
         let rcs = dna.complStrand(sa[i], true);
         rcsa.push(rcs);
     }
-
+    
     const pool = new Pool();
         
     for (let i_pool = 0; i_pool < sa.length; i_pool++) {
@@ -226,7 +254,8 @@ server.post('/index', function(req, res, next) {
         .on('finished', function() {
         console.log('Everything done, shutting down the thread pool.');
         pool.killAll();
-        });
+        res.sendStatus(200);   
+    });
    
 });
 
@@ -245,7 +274,10 @@ function sendIndex(index, organism, i) {
     });
 }
 
-
+// function sendTimer(res) {
+//     let searchTimeEnd = Date.now();
+//     res.send(searchTimeEnd);
+// }
 
 
 server.post('/query', function(req, res, next) {    

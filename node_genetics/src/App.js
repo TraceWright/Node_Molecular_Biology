@@ -3,18 +3,21 @@ import './style.css';
 import ResultList from './components/resultList';
 import Evaluation from './components/evaluation';
 import SearchTimer from './components/searchTimer';
+import IndexTimer from './components/indexTimer';
 import * as dna from 'dna';
-const Stopwatch = require("node-stopwatch").Stopwatch;
 const Client = require('node-rest-client').Client;
 const pdfConverter = require('jspdf');
 let semaphore = require('semaphore');
-let indexStopwatch = Stopwatch.create();
 const Pool = require('threads').Pool;
 
-function matchesKmer(element, index, array){
-    if (element.k === this) {
-        return index;
-    }
+// function matchesKmer(element, index, array){
+//     if (element.k === this) {
+//         return index;
+//     }
+// }
+
+function displayStats(results) {
+    this.setState({ indexStats: results });
 }
 
 function initElement(elem) {
@@ -56,7 +59,14 @@ function endSearchTime() {
     document.getElementById('search-timer').style.display = 'grid';
     let searchTimeEnd = Date.now();
     console.log((searchTimeEnd - this.state.searchTimeStart).toFixed(2));
-    this.setState({ searchTime:  ((searchTimeEnd - this.state.searchTimeStart).toFixed(2)) * 0.001});
+    this.setState({ searchTime:  Math.round(searchTimeEnd - this.state.searchTimeStart).toFixed(2) * 0.001});
+}
+
+function endIndexingTime() {
+    document.getElementById('index-timer').style.display = 'grid';
+    let indexTimeEnd = Date.now();
+    console.log((indexTimeEnd - this.state.indexTimeStart).toFixed(2));
+    this.setState({ indexTime:  Math.round(indexTimeEnd - this.state.indexTimeStart).toFixed(2) * 0.001});
 }
 
 function initVectors(queryTokens, uninvertedList, organisms, seqLen) {
@@ -256,13 +266,17 @@ class App extends Component {
             indexes: [], 
             searchTimeStart: 0,
             searchTime: 0,
-            indexTime: {},
+            indexTimeStart: 0,
+            indexTime: 0,
             results: [],
             an: [],
-            kmerLength: 7 
+            kmerLength: 7,
+            indexStats: {}
         }
 
+        displayStats = displayStats.bind(this);
         endSearchTime = endSearchTime.bind(this);
+        endIndexingTime = endIndexingTime.bind(this);
         rankResults = rankResults.bind(this); 
         displayResults = displayResults.bind(this);
         this.onPrint = this.onPrint.bind(this);
@@ -275,10 +289,11 @@ class App extends Component {
         this.indexMain = this.indexMain.bind(this);   
         this.createIndexSpinner = this.createIndexSpinner.bind(this);  
         // this.createIndex = this.createIndex.bind(this);
-        this.tokeniseSequence = this.tokeniseSequence.bind(this);
-        this.createRotations = this.createRotations.bind(this);
+        // this.tokeniseSequence = this.tokeniseSequence.bind(this);
+        // this.createRotations = this.createRotations.bind(this);
         this.handleChange = this.handleChange.bind(this); 
         this.saveSequence = this.saveSequence.bind(this);
+
     }
 
     handleChange({ target }) {
@@ -317,8 +332,9 @@ class App extends Component {
             headers: { "Content-Type": "application/json" },
         };
         client.post("http://localhost:4000/stats", args, function (data, response) {
-          results = JSON.parse(data.toString());
+          results = JSON.parse(data);
           console.log(results);
+          displayStats(results);
         });     
     }
 
@@ -409,46 +425,46 @@ class App extends Component {
         }); 
       }
 
-    displayTimer(time, uiElement) {
-      time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
-    }
+    // displayTimer(time, uiElement) {
+    //   time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
+    // }
 
-    addTimes(timeOne, timeTwo) {
-        let minutes = timeOne.minutes + timeTwo.minutes;
-        let seconds = timeOne.seconds + timeTwo.seconds;
-        if (seconds > 60) {
-            seconds -= 60;
-            minutes += 1;
-        }
-        return { minutes: minutes, seconds: seconds };
-    }
+    // addTimes(timeOne, timeTwo) {
+    //     let minutes = timeOne.minutes + timeTwo.minutes;
+    //     let seconds = timeOne.seconds + timeTwo.seconds;
+    //     if (seconds > 60) {
+    //         seconds -= 60;
+    //         minutes += 1;
+    //     }
+    //     return { minutes: minutes, seconds: seconds };
+    // }
 
-    createRotations(seqArr) {
-        let prev = '';
-        let rotationArr = [];
-        let ql = seqArr[0].length;
+    // createRotations(seqArr) {
+    //     let prev = '';
+    //     let rotationArr = [];
+    //     let ql = seqArr[0].length;
 
-        rotationArr[0] = seqArr;
-        for (let i = 1; i < ql; i++) {
-            rotationArr[i] = [];
-            prev = '';
-            for (let j = 0; j < seqArr.length - 1; j++) {
-                let current = seqArr[j].slice(0, ql-i);
-                rotationArr[i][j] = `${prev}${current}`
-                prev = seqArr[j].slice(ql-i, ql);
-              }      
-            }
-        return rotationArr;
-    }
+    //     rotationArr[0] = seqArr;
+    //     for (let i = 1; i < ql; i++) {
+    //         rotationArr[i] = [];
+    //         prev = '';
+    //         for (let j = 0; j < seqArr.length - 1; j++) {
+    //             let current = seqArr[j].slice(0, ql-i);
+    //             rotationArr[i][j] = `${prev}${current}`
+    //             prev = seqArr[j].slice(ql-i, ql);
+    //           }      
+    //         }
+    //     return rotationArr;
+    // }
 
-    tokeniseSequence(s) {
-        let tok = s.replace('/,/g' , '');
-        let len = this.state.kmerLength;
-        let regex = new RegExp(`.{1,${len}}`, "g");
-        let tokArray = tok.match(regex);
-        // let tokArray = tok.match(/.{1,7}/g);
-        return tokArray;
-    }
+    // tokeniseSequence(s) {
+    //     let tok = s.replace('/,/g' , '');
+    //     let len = this.state.kmerLength;
+    //     let regex = new RegExp(`.{1,${len}}`, "g");
+    //     let tokArray = tok.match(regex);
+    //     // let tokArray = tok.match(/.{1,7}/g);
+    //     return tokArray;
+    // }
 
     getSequenceLengths(sa) {
         let sequenceLengths = [];
@@ -492,6 +508,8 @@ class App extends Component {
     indexMain(db) {
         let ant = this.processAnnotations(this.state.annotations);
         this.postAnnotations(ant.genesProducts);
+        let indexSearchTime = Date.now();
+        this.setState({ indexTimeStart: indexSearchTime });
         let sa = this.state.sequences;
         let sequenceLengths = this.getSequenceLengths(sa);
         
@@ -502,16 +520,18 @@ class App extends Component {
             };
             client.post("http://localhost:4000/index", args, function (data, response) {
                 console.log(data, response);
+                endIndexingTime();
+                //response
             }); 
             document.getElementById('loader').style.display = 'none';
-            document.getElementById('indexProgress').style.display = 'none';
+            // document.getElementById('indexProgress').style.display = 'none';
     }
 
     createIndexSpinner(db = null) {
         // this.getPerformanceStats();
         document.getElementById('loader').style.display = '';
-        document.getElementById('indexProgress').value = 0;
-        document.getElementById('indexProgress').style.display = '';
+        // document.getElementById('indexProgress').value = 0;
+        // document.getElementById('indexProgress').style.display = '';
         // Give the display some time to update before doing the main workload
         setTimeout(this.indexMain.bind(this, db), 500);
     }
@@ -630,8 +650,12 @@ class App extends Component {
                     <div className="indexing">
                         <h2 className="heading">Indexing</h2><br/><br/>
                         <button className='buttn' id="mainBttn" onClick={ this.createIndexSpinner }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button><br/>
-                        <progress id="indexProgress" max="1" value="0" style={{display: 'none'}}></progress>
-                        <label style={{ paddingLeft: '40px' }} id="index-timer"></label>
+                        {/* <progress id="indexProgress" max="1" value="0" style={{display: 'none'}}></progress> */}
+                        {/* <label style={{ paddingLeft: '40px' }} id="index-timer"></label> */}
+                        <div id="index-timer" style={{ display: 'none' }}>
+                            <br/>
+                            <IndexTimer timer={ this.state.indexTime } />  
+                        </div> 
                         <br/><br/><br/>
                         <button className='buttn' id="clear-data-button" onClick={ this.cleardb }>Clear Database</button>
                         <br/><br/><br/>
@@ -663,7 +687,7 @@ class App extends Component {
                         <ResultList results={ this.state.results } />
                     </div>
                     <div id="evaluation" style={{ display: 'none' }}>
-                        <Evaluation searchTime={ this.state.searchTime } indexTime={ this.state.indexTime }/>
+                        <Evaluation searchTime={ this.state.searchTime } indexTime={ this.state.indexTime } indexStats={ this.state.indexStats } />
                     </div>
                 </div>
             </div>
