@@ -99,85 +99,6 @@ server.post('/annotations', function(req, res, next) {
     });
 });
 
-// function tokeniseSequence(s, len) {
-//     let tok = s.replace('/,/g' , '');
-//     let regex = new RegExp(`.{1,${len}}`, "g");
-//     let tokArray = tok.match(regex);
-//     // let tokArray = tok.match(/.{1,7}/g);
-//     return tokArray;
-// }
-
-// function createRotations(seqArr) {
-//     let prev = '';
-//     let rotationArr = [];
-//     let ql = seqArr[0].length;
-
-//     rotationArr[0] = seqArr;
-//     for (let i = 1; i < ql; i++) {
-//         rotationArr[i] = [];
-//         prev = '';
-//         for (let j = 0; j < seqArr.length - 1; j++) {
-//             let current = seqArr[j].slice(0, ql-i);
-//             rotationArr[i][j] = `${prev}${current}`
-//             prev = seqArr[j].slice(ql-i, ql);
-//           }      
-//         }
-//     return rotationArr;
-// }
-
-// function createComplementStrand(sequence) {
-//     let complement = dna.complStrand(sequence, true);
-//     return complement;
-// }
-
-// function processSequences(templateSequence, revCompSequence, sequenceLength, ant, kmerLength, pool) {
-//     let sequenceArray = [];
-//     sequenceArray.push(templateSequence, revCompSequence);
-//     let strand = '';        
-//     let revComp;
-//     let cra = {};
-
-//     for (let i = 0; i < 2; i++) {
-//         let ta = tokeniseSequence(sequenceArray[i], kmerLength);
-//         //console.log(ta);
-//         let r = createRotations(ta);
-//         i === 0 ? strand = 't': strand = 'c';
-//         cra[strand] = r;
-//     }
-
-//                 let index = {};
-//                 let i_main = 0;  // artifact from methods which process multiple documents into 1 index
-
-//                 for (strand in cra) {
-//                     let ra = cra[strand];
-
-//                     let queryLength = ra.length;
-//                     let positionStart;
-                    
-//                     for (let j = 0; j < ra.length; j++) {
-//                         for (let i = 0; i < ra[j].length; i++) {
-//                             positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
-//                             if (!index.hasOwnProperty(ra[j][i])) {
-//                                 index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
-//                             } else {
-//                                 let match = -1;
-//                                 for (let l = 0; l < index[ra[j][i]].length; l++) {
-//                                     if (i_main === index[ra[j][i]][l][0]) {
-//                                         match = l;
-//                                     }
-//                                 }
-//                                 if (match < 0) {
-//                                     index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
-//                                 } else {
-//                                     index[ra[j][i]][match][1] += 1;
-//                                     index[ra[j][i]][match][2].push([positionStart, strand]); 
-//                                 }    
-//                             }  
-//                         }
-//                     }
-//                 }
-//             return index;
-//         }
 
 server.post('/index', function(req, res, next) {
     res.sendStatus(200);
@@ -193,15 +114,12 @@ server.post('/index', function(req, res, next) {
     }
 
     const pool = new Pool();
-    // for (let i = 0; i < sa.length; i++) {
         
     for (let i_pool = 0; i_pool < sa.length; i_pool++) {
-        console.log(sa.length)
 
         const poolJob = pool.run(
             function(input, done) {
 
-            // let ant = organism;
             let sa = input.sa;
             let ant = input.organism;
             let kmerLength = input.kmerLength;
@@ -268,7 +186,6 @@ server.post('/index', function(req, res, next) {
                                 for (let i = 0; i < ra[j].length; i++) {
                                     positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
                                     if (!index.hasOwnProperty(ra[j][i])) {
-                                        // index[ra[j][i]] = [[i_main, 1 , [[0, strand]]]]
                                         index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
                                     } else {
                                         let match = -1;
@@ -278,10 +195,8 @@ server.post('/index', function(req, res, next) {
                                             }
                                         }
                                         if (match < 0) {
-                                            // index[ra[j][i]].push([i_main, 1, [[0, strand]] ]);                                                            
                                             index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
                                         } else {
-                                            // index[ra[j][i]][match][2].push([0, strand])
                                             index[ra[j][i]][match][1] += 1;
                                             index[ra[j][i]][match][2].push([positionStart, strand]); 
                                         }    
@@ -294,7 +209,7 @@ server.post('/index', function(req, res, next) {
             }
             newIndex.push({ organism: ant[i] });
             newIndex.push({ seqLen: sequenceLength });
-        // }
+
         done({ index: newIndex, i: i }, input);
         }).send({  sa: sa, organism: organism, kmerLength: kmerLength, rcsa: rcsa, i: i_pool });
     }
@@ -304,8 +219,6 @@ server.post('/index', function(req, res, next) {
         console.log('Job done: {}');
         let organism = Buffer.from(message.index[message.index.length - 2].organism).toString('base64');
         sendIndex(message.index, organism, message.i);
-        // console.log(message.index[message.index.length - 2].organism);
-        // console.log(message.i);
         })
         .on('error', function(job, error) {
             console.error('Job errored:', job);
@@ -344,7 +257,6 @@ server.post('/query', function(req, res, next) {
             let sem = semaphore(1);
             collInfos.forEach(function(element) {
                 if (element.name.indexOf("kmers_") != -1) {
-                    // kmer_collection.push(element);
                     sem.take(function() {
                         let collection = db.collection(element.name);
                         console.log(req.body.data);
@@ -359,7 +271,6 @@ server.post('/query', function(req, res, next) {
                                     assert.equal(err, null);
                                     result.push(org);
                                     kmer_matches.push(result);
-                                    // res.send(JSON.stringify(result));
                                     sem.leave();
                                 }); 
                             });
@@ -395,28 +306,6 @@ server.post('/cleardb', function(req, res, next) {
         res.sendStatus(200);
     });
 });
-
-
-// const pgPool = new Pool({
-//     database: 'adventureworks',
-//     user: 'tracey',
-//     password: 'password',
-//     host: 'localhost',
-//     port: 5432, 
-//     postgraphql: {
-//         schema: 'person',  
-//     }
-// });
-
-
-// server.get('/person', function(req, res){
-//   pgPool.query('Select * from person.person limit 100').then(function(data){
-//     console.log(data);
-//     res.send(data);
-//   }, function(err){res.send(500,{error: err})})
-// });
-
-// server.use(postgraphql('postgres://tracey:password@localhost:5432/adventureworks'));
 
 
 server.listen(PORT, () => 
