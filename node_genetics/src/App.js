@@ -291,8 +291,6 @@ class App extends Component {
         this.createRotations = this.createRotations.bind(this);
         this.handleChange = this.handleChange.bind(this); 
         this.saveSequence = this.saveSequence.bind(this);
-        this.htmlDbMethod = this.htmlDbMethod.bind(this);
-        this.createHTMLIndex = this.createHTMLIndex.bind(this);
     }
 
     handleChange({ target }) {
@@ -586,119 +584,73 @@ class App extends Component {
         //     }, null);
         //  });
 
-    createHTMLIndex(db, ra, i_main, arrayLength, sequenceLengths, organisms, revComp) {
-            let strand = '';
-            revComp === true ? strand = 'c': strand = 't';
-            indexStopwatch.start();
-            let queryLength = ra.length;
-            let positionStart;
+   
+    // processSequences(db, templateSequenceArray, revCompSequenceArray, sequenceLength, ant, pool) {
+    //     let sequenceArray = [];
+    //     sequenceArray.push(templateSequenceArray, revCompSequenceArray);
+    //     let strand = '';        
+    //     let revComp;
+    //     let ra = {};
 
-            // check if kmer is already in database
-
-           
-
-            // if in database, update
-
-            // else, insert
-
-        let sem = semaphore(1);
-
-        db.transaction(function (tx) {
-            ra.map(function(ra_element) {
-                ra_element.map(function(token, i) {
-                        positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
-                        (function(ktoken, posStart){
-                            tx.executeSql('SELECT * FROM NODE_GENETICS WHERE kmer = (?) AND doc = (?)', [ktoken, i_main], function (tx, results) {
-                                if (results.rows.length === 0) {
-                                    tx.executeSql('INSERT INTO NODE_GENETICS (kmer, doc, tf, pos) VALUES (?, ?, ?, ?)', [ktoken, i_main, 1, JSON.stringify([[posStart, strand]])]); //, function(err) {console.log(err)}); 
-                                } else {
-                                    if(results.rows.length > 1){ console.log("WAAAAAAAAAA....."); return;}
-                                    let tf = results.rows[0].tf + 1;
-                                    let a = JSON.parse(results.rows[0].pos)
-                                    a.push([posStart, strand]);
-                                    let pos = JSON.stringify(a);
-
-                                    tx.executeSql('UPDATE NODE_GENETICS SET tf = ?, pos = ? WHERE kmer = (?) AND doc = (?)', [tf, pos, ktoken, i_main]);
-                                }  
-                            }, null)
-                    })(token, positionStart);
-                });
-            });
-        });
-            // i_main === arrayLength - 1 && revComp === true ? index.push({ organisms: organisms, sequence_count: arrayLength }): null;
-            indexStopwatch.stop();
-            let minutes = Math.floor(indexStopwatch.elapsed.minutes);
-            let seconds = indexStopwatch.elapsed.seconds % 60; 
-            // this.setState({ indexes: index });
-            return { minutes, seconds }   
-    }
-
-    processSequences(db, templateSequenceArray, revCompSequenceArray, sequenceLength, ant, pool) {
-        let sequenceArray = [];
-        sequenceArray.push(templateSequenceArray, revCompSequenceArray);
-        let strand = '';        
-        let revComp;
-        let ra = {};
-
-        for (let i = 0; i < 2; i++) {
-            let ta = this.tokeniseSequence(sequenceArray[i]);
-            let r = this.createRotations(ta);
-            //ra.push(r);
-            i === 0 ? strand = 't': strand = 'c';
-            ra[strand] = r;
-        }
+    //     for (let i = 0; i < 2; i++) {
+    //         let ta = this.tokeniseSequence(sequenceArray[i]);
+    //         let r = this.createRotations(ta);
+    //         //ra.push(r);
+    //         i === 0 ? strand = 't': strand = 'c';
+    //         ra[strand] = r;
+    //     }
  
-            // indexStopwatch.start();
+    //         // indexStopwatch.start();
             
-            const poolJob = pool.run(
-                function(input, done, progress) {
-                    let index = {};
-                    let indexTimes = { minutes: 0, seconds: 0 };
+    //         const poolJob = pool.run(
+    //             function(input, done, progress) {
+    //                 let index = {};
+    //                 let indexTimes = { minutes: 0, seconds: 0 };
 
-                    let cra = input.ra;
-                    let i_main = 0;  // artifact from methods which process multiple documents into 1 index
-                    let arrayLength = input.sequenceArray;
-                    let sequenceLengths = input.sequenceLength;
-                    let organisms = input.ant;
-                    let strand = '';
-                    let loopProgress = 0;
+    //                 let cra = input.ra;
+    //                 let i_main = 0;  // artifact from methods which process multiple documents into 1 index
+    //                 let arrayLength = input.sequenceArray;
+    //                 let sequenceLengths = input.sequenceLength;
+    //                 let organisms = input.ant;
+    //                 let strand = '';
+    //                 let loopProgress = 0;
 
-                    for (strand in cra) {
-                        let ra = cra[strand];
+    //                 for (strand in cra) {
+    //                     let ra = cra[strand];
 
-                        let queryLength = ra.length;
-                        let positionStart;
+    //                     let queryLength = ra[i].length;
+    //                     let positionStart;
                         
-                        for (let j = 0; j < ra.length; j++) {
-                            for (let i = 0; i < ra[j].length; i++) {
-                                positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
-                                if (!index.hasOwnProperty(ra[j][i])) {
-                                    index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
-                                } else {
-                                    let match = -1;
-                                    for (let l = 0; l < index[ra[j][i]].length; l++) {
-                                        if (i_main === index[ra[j][i]][l][0]) {
-                                            match = l;
-                                        }
-                                    }
-                                    if (match < 0) {
-                                        index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
-                                    } else {
-                                        index[ra[j][i]][match][1] += 1;
-                                        index[ra[j][i]][match][2].push([positionStart, strand]); 
-                                    }    
-                                }  
-                            }
-                            progress((j + (queryLength-1)*loopProgress)/(queryLength*2-2));
-                        }
-                        loopProgress++;
-                    }
-                    done({ index: index , time: indexTimes, organisms: organisms, sequence_count: arrayLength, seqLen: sequenceLengths}, input);
-                }).send({ ra: ra, sequenceArray: sequenceArray.length, sequenceLength: sequenceLength, ant: ant})
-                .on('progress', function(progress) {
-                    console.log(`Progress: ${progress*100}%`);
-                    document.getElementById('indexProgress').value = progress;
-                });
+    //                     for (let j = 0; j < ra.length; j++) {
+    //                         for (let i = 0; i < ra[j].length; i++) {
+    //                             positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
+    //                             if (!index.hasOwnProperty(ra[j][i])) {
+    //                                 index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
+    //                             } else {
+    //                                 let match = -1;
+    //                                 for (let l = 0; l < index[ra[j][i]].length; l++) {
+    //                                     if (i_main === index[ra[j][i]][l][0]) {
+    //                                         match = l;
+    //                                     }
+    //                                 }
+    //                                 if (match < 0) {
+    //                                     index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
+    //                                 } else {
+    //                                     index[ra[j][i]][match][1] += 1;
+    //                                     index[ra[j][i]][match][2].push([positionStart, strand]); 
+    //                                 }    
+    //                             }  
+    //                         }
+    //                         progress((j + (queryLength-1)*loopProgress)/(queryLength*2-2));
+    //                     }
+    //                     loopProgress++;
+    //                 }
+    //                 done({ index: index , time: indexTimes, organisms: organisms, sequence_count: arrayLength, seqLen: sequenceLengths}, input);
+    //             }).send({ ra: ra, sequenceArray: sequenceArray.length, sequenceLength: sequenceLength, ant: ant})
+    //             .on('progress', function(progress) {
+    //                 console.log(`Progress: ${progress*100}%`);
+    //                 document.getElementById('indexProgress').value = progress;
+    //             });
                 
                 // a({ ra: ra, sequenceArray: sequenceArray.length, sequenceLengths:sequenceLengths, ant: ant.organisms});
         // // let indexTimes = { minutes: 0, seconds: 0 };
@@ -713,13 +665,130 @@ class App extends Component {
                     // indexTimes.minutes += results.time.minutes;
                     // indexTimes.seconds += results.time.seconds;
         // return indexTimes;
-    }
+    // }
         
     indexMain(db) {
+
+    //     let kmerLength = this.state.kmerLength;
+    //     let ant = this.processAnnotations(this.state.annotations);
+    //     let sa = this.state.sequences;
+    //     let rcsa = [];
+    //     let newIndex = [];
+
+    //     for (let i = 0; i < sa.length; i++) {
+    //         let rcs = dna.complStrand(sa[i], true);
+    //         rcsa.push(rcs);
+    //     }
+
+
+    //     for (let i = 0; i < sa.length; i++) {
+
+
+    //             let sequenceLength = sa[i].length;
+                
+    //             let sequenceArray = [];
+    //             sequenceArray.push(sa[i], rcsa[i]);
+    //             let strand = '';        
+    //             let cra = {};
+    //             let ta = [];
+    //             let t = [];
+    //             let c = [];
+        
+    //             // tokeniseSequences
+    //             for (let j = 0; j < 2; j++) {
+    //                 let tok = sequenceArray[j].replace('/,/g' , '');
+    //                 let regex = new RegExp(`.{1,${kmerLength}}`, "g");
+    //                 ta[j] = tok.match(regex);
+    //                 j === 0 ? t[0] = ta[j]: c[0] = ta[j]; // element one of rotations array                    
+    //             }
+                
+    //             // createRotations
+    //             let prev = '';
+    //             let ql = ta[0][0].length;
+            
+    //             for (let i = 1; i < ql; i++) {
+    //                 t[i] = [];
+    //                 prev = '';
+    //                 for (let k = 0; k < ta[0].length - 1; k++) {
+    //                     let current = ta[0][k].slice(0, ql-i);
+    //                     t[i][k] = `${prev}${current}`
+    //                     prev = ta[0][k].slice(ql-i, ql);
+    //                 } 
+    //             }
+
+    //             for (let i = 1; i < ql; i++) {
+    //                 c[i] = [];
+    //                 prev = '';
+    //                 for (let k = 0; k < ta[1].length - 1; k++) {
+    //                     let current = ta[1][k].slice(0, ql-i);
+    //                     c[i][k] = `${prev}${current}`
+    //                     prev = ta[1][k].slice(ql-i, ql);
+    //                 } 
+    //             }
+
+    //             cra['t'] = t;
+    //             cra['c'] = c;
+        
+    //                     let index = {};
+    //                     let i_main = 0;  // artifact from methods which process multiple documents into 1 index
+                        
+    //                     for (strand in cra) {
+    //                         console.log(strand);
+    //                         let ra = cra[strand];
+        
+    //                         let queryLength = ra.length;
+    //                         let positionStart;
+                            
+    //                         for (let j = 0; j < ra.length; j++) {
+    //                             for (let i = 0; i < ra[j].length; i++) {
+    //                                 positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
+    //                                 if (!index.hasOwnProperty(ra[j][i])) {
+    //                                     // index[ra[j][i]] = [[i_main, 1 , [[0, strand]]]]
+    //                                     index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
+    //                                 } else {
+    //                                     let match = -1;
+    //                                     for (let l = 0; l < index[ra[j][i]].length; l++) {
+    //                                         if (i_main === index[ra[j][i]][l][0]) {
+    //                                             match = l;
+    //                                         }
+    //                                     }
+    //                                     if (match < 0) {
+    //                                         // index[ra[j][i]].push([i_main, 1, [[0, strand]] ]);                                                            
+    //                                         index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
+    //                                     } else {
+    //                                         // index[ra[j][i]][match][2].push([0, strand])
+    //                                         index[ra[j][i]][match][1] += 1;
+    //                                         index[ra[j][i]][match][2].push([positionStart, strand]); 
+    //                                     }    
+    //                                 }  
+    //                             }
+    //                         }
+    //                     }     
+    //         for (let kmer in index) {
+    //             newIndex.push({ k: kmer, d: index[kmer] });
+    //     }
+    //         newIndex.push({ organism: ant[i] });
+    //         newIndex.push({ seqLen: sequenceLength });
+
+
+
+    // }
+
+
+
+
+
+
+
+
+
+
+
+
         let ant = this.processAnnotations(this.state.annotations);
         this.postAnnotations(ant.genesProducts);
         let sa = this.state.sequences;
-        let rcsa = this.state.reverseComplement;
+        // let rcsa = this.state.reverseComplement;
         let sequenceLengths = this.getSequenceLengths(sa);
         // const pool = new Pool();
         
@@ -735,7 +804,20 @@ class App extends Component {
             document.getElementById('loader').style.display = 'none';
             document.getElementById('indexProgress').style.display = 'none';
 
-        // pool
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+            // pool
         // .on('done', function(job, message) {
         //     console.log('Job done!');
         //     document.getElementById('indexProgress').value = 0;
@@ -783,9 +865,9 @@ class App extends Component {
         //let indexTimes = this.addTimes(indexTimesTemplate); 
             //indexTimesComplementary);
        // this.setState({ indexTime: indexTimes });
-        let tempArray = this.state.indexes;
-        tempArray.push({ seqLen: sequenceLengths });
-        this.setState({ indexes: tempArray });      
+        // let tempArray = this.state.indexes;
+        // tempArray.push({ seqLen: sequenceLengths });
+        // this.setState({ indexes: tempArray });      
         // let indexTimer  = document.getElementById('index-timer');
         // this.displayTimer(indexTimes, indexTimer);
         //document.getElementById('loader').style.display = 'none'; 
@@ -919,8 +1001,6 @@ class App extends Component {
                         <progress id="indexProgress" max="1" value="0" style={{display: 'none'}}></progress>
                         <label style={{ paddingLeft: '40px' }} id="index-timer"></label>
                         <br/><br/><br/>
-                        <button className='buttn' id="post-data-button" onClick={ this.postData }>Post Index to Database</button>
-                        <br/><br/><br/>
                         <button className='buttn' id="clear-data-button" onClick={ this.cleardb }>Clear Database</button>
                         <br/><br/><br/>
                     </div>
@@ -946,7 +1026,6 @@ class App extends Component {
                     <button id="hide-gene-prod" className='buttn' onClick={ this.hideGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px', display: 'none' }}>Hide Gene Products</button>
                     <button id="eval" className='buttn' onClick={ this.evaluateResults } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '150px' }}>Evaluate Results</button>
                     <button id="hide-eval" className='buttn' onClick={ this.hideEval } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '150px' }}>Hide Evaluation</button>
-                    <button id="test" className='buttn' onClick={ this.htmlDbMethod } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '150px' }}>Indexey Testerer</button>
                 </div>
                     <div id="results-list">
                         <ResultList results={ this.state.results } />

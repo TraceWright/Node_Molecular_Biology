@@ -99,150 +99,166 @@ server.post('/annotations', function(req, res, next) {
     });
 });
 
-function tokeniseSequence(s, len) {
-    let tok = s.replace('/,/g' , '');
-    let regex = new RegExp(`.{1,${len}}`, "g");
-    let tokArray = tok.match(regex);
-    // let tokArray = tok.match(/.{1,7}/g);
-    return tokArray;
-}
+// function tokeniseSequence(s, len) {
+//     let tok = s.replace('/,/g' , '');
+//     let regex = new RegExp(`.{1,${len}}`, "g");
+//     let tokArray = tok.match(regex);
+//     // let tokArray = tok.match(/.{1,7}/g);
+//     return tokArray;
+// }
 
-function createRotations(seqArr) {
-    let prev = '';
-    let rotationArr = [];
-    let ql = seqArr[0].length;
+// function createRotations(seqArr) {
+//     let prev = '';
+//     let rotationArr = [];
+//     let ql = seqArr[0].length;
 
-    rotationArr[0] = seqArr;
-    for (let i = 1; i < ql; i++) {
-        rotationArr[i] = [];
-        prev = '';
-        for (let j = 0; j < seqArr.length - 1; j++) {
-            let current = seqArr[j].slice(0, ql-i);
-            rotationArr[i][j] = `${prev}${current}`
-            prev = seqArr[j].slice(ql-i, ql);
-          }      
-        }
-    return rotationArr;
-}
+//     rotationArr[0] = seqArr;
+//     for (let i = 1; i < ql; i++) {
+//         rotationArr[i] = [];
+//         prev = '';
+//         for (let j = 0; j < seqArr.length - 1; j++) {
+//             let current = seqArr[j].slice(0, ql-i);
+//             rotationArr[i][j] = `${prev}${current}`
+//             prev = seqArr[j].slice(ql-i, ql);
+//           }      
+//         }
+//     return rotationArr;
+// }
 
-function createComplementStrand(sequence) {
-    let complement = dna.complStrand(sequence, true);
-    return complement;
-}
+// function createComplementStrand(sequence) {
+//     let complement = dna.complStrand(sequence, true);
+//     return complement;
+// }
 
-function processSequences(templateSequence, revCompSequence, sequenceLength, ant, kmerLength, pool) {
-    let sequenceArray = [];
-    sequenceArray.push(templateSequence, revCompSequence);
-    let strand = '';        
-    let revComp;
-    let cra = {};
+// function processSequences(templateSequence, revCompSequence, sequenceLength, ant, kmerLength, pool) {
+//     let sequenceArray = [];
+//     sequenceArray.push(templateSequence, revCompSequence);
+//     let strand = '';        
+//     let revComp;
+//     let cra = {};
 
-    for (let i = 0; i < 2; i++) {
-        let ta = tokeniseSequence(sequenceArray[i], kmerLength);
-        //console.log(ta);
-        let r = createRotations(ta);
-        i === 0 ? strand = 't': strand = 'c';
-        cra[strand] = r;
-    }
+//     for (let i = 0; i < 2; i++) {
+//         let ta = tokeniseSequence(sequenceArray[i], kmerLength);
+//         //console.log(ta);
+//         let r = createRotations(ta);
+//         i === 0 ? strand = 't': strand = 'c';
+//         cra[strand] = r;
+//     }
 
-                let index = {};
-                let i_main = 0;  // artifact from methods which process multiple documents into 1 index
+//                 let index = {};
+//                 let i_main = 0;  // artifact from methods which process multiple documents into 1 index
 
-                for (strand in cra) {
-                    let ra = cra[strand];
+//                 for (strand in cra) {
+//                     let ra = cra[strand];
 
-                    let queryLength = ra.length;
-                    let positionStart;
+//                     let queryLength = ra.length;
+//                     let positionStart;
                     
-                    for (let j = 0; j < ra.length; j++) {
-                        for (let i = 0; i < ra[j].length; i++) {
-                            positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
-                            if (!index.hasOwnProperty(ra[j][i])) {
-                                index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
-                            } else {
-                                let match = -1;
-                                for (let l = 0; l < index[ra[j][i]].length; l++) {
-                                    if (i_main === index[ra[j][i]][l][0]) {
-                                        match = l;
-                                    }
-                                }
-                                if (match < 0) {
-                                    index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
-                                } else {
-                                    index[ra[j][i]][match][1] += 1;
-                                    index[ra[j][i]][match][2].push([positionStart, strand]); 
-                                }    
-                            }  
-                        }
-                    }
-                }
-            return index;
-        }
+//                     for (let j = 0; j < ra.length; j++) {
+//                         for (let i = 0; i < ra[j].length; i++) {
+//                             positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
+//                             if (!index.hasOwnProperty(ra[j][i])) {
+//                                 index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
+//                             } else {
+//                                 let match = -1;
+//                                 for (let l = 0; l < index[ra[j][i]].length; l++) {
+//                                     if (i_main === index[ra[j][i]][l][0]) {
+//                                         match = l;
+//                                     }
+//                                 }
+//                                 if (match < 0) {
+//                                     index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
+//                                 } else {
+//                                     index[ra[j][i]][match][1] += 1;
+//                                     index[ra[j][i]][match][2].push([positionStart, strand]); 
+//                                 }    
+//                             }  
+//                         }
+//                     }
+//                 }
+//             return index;
+//         }
 
 server.post('/index', function(req, res, next) {
+    res.sendStatus(200);
     let sa = req.body.sequence;
     let organism = req.body.organism;
     let kmerLength = req.body.kmerLength;
     let rcsa = [];
+
+    // create reverse complement strand
     for (let i = 0; i < sa.length; i++) {
         let rcs = dna.complStrand(sa[i], true);
         rcsa.push(rcs);
     }
 
-    
-
     const pool = new Pool();
+    // for (let i = 0; i < sa.length; i++) {
+        
+    for (let i_pool = 0; i_pool < sa.length; i_pool++) {
+        console.log(sa.length)
 
-    for (let i = 0; i < sa.length; i++) {
         const poolJob = pool.run(
             function(input, done) {
 
+            // let ant = organism;
             let sa = input.sa;
             let ant = input.organism;
             let kmerLength = input.kmerLength;
-            let rcsa = input.rcsa;
-            let newIndex = []; 
+            let rcsa = input.rcsa; 
             let i = input.i;
+            let newIndex = [];
         
-            for (i = 0; i < sa.length; i++) {
                 let sequenceLength = sa[i].length;
+                
                 let sequenceArray = [];
                 sequenceArray.push(sa[i], rcsa[i]);
                 let strand = '';        
                 let cra = {};
+                let ta = [];
+                let t = [];
+                let c = [];
         
+                // tokeniseSequences
                 for (let j = 0; j < 2; j++) {
-
-                // tokeniseSequence
-                let tok = sequenceArray[i].replace('/,/g' , '');
-                let regex = new RegExp(`.{1,${kmerLength}}`, "g");
-                let ta = tok.match(regex);
-
-
+                    let tok = sequenceArray[j].replace('/,/g' , '');
+                    let regex = new RegExp(`.{1,${kmerLength}}`, "g");
+                    ta[j] = tok.match(regex);
+                    j === 0 ? t[0] = ta[j]: c[0] = ta[j]; // element one of rotations array                    
+                }
+                
                 // createRotations
                 let prev = '';
-                let r = [];
-                let ql = ta[0].length;
+                let ql = ta[0][0].length;
             
-                r[0] = ta;
-                for (let i = 1; i < ql; i++) {
-                    r[i] = [];
+                for (let n = 1; n < ql; n++) {
+                    t[n] = [];
                     prev = '';
-                    for (let j = 0; j < ta.length - 1; j++) {
-                        let current = ta[j].slice(0, ql-i);
-                        r[i][j] = `${prev}${current}`
-                        prev = ta[j].slice(ql-i, ql);
-                    }      
-                    }
+                    for (let k = 0; k < ta[0].length - 1; k++) {
+                        let current = ta[0][k].slice(0, ql-n);
+                        t[n][k] = `${prev}${current}`
+                        prev = ta[0][k].slice(ql-n, ql);
+                    } 
+                }
 
-                j === 0 ? strand = 't': strand = 'c';
-                cra[strand] = r;
-            }
+                for (let n = 1; n < ql; n++) {
+                    c[n] = [];
+                    prev = '';
+                    for (let k = 0; k < ta[1].length - 1; k++) {
+                        let current = ta[1][k].slice(0, ql-n);
+                        c[n][k] = `${prev}${current}`
+                        prev = ta[1][k].slice(ql-n, ql);
+                    } 
+                }
+
+                cra['t'] = t;
+                cra['c'] = c;
         
                         let index = {};
                         let i_main = 0;  // artifact from methods which process multiple documents into 1 index
                         
                         for (strand in cra) {
+                            console.log(strand);
                             let ra = cra[strand];
         
                             let queryLength = ra.length;
@@ -252,8 +268,8 @@ server.post('/index', function(req, res, next) {
                                 for (let i = 0; i < ra[j].length; i++) {
                                     positionStart = 0 + (i * queryLength); // TODO: 0 is hardcoded currently for rotNumber
                                     if (!index.hasOwnProperty(ra[j][i])) {
-                                        index[ra[j][i]] = [[i_main, 1 , [[0, strand]]]]
-                                        // index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
+                                        // index[ra[j][i]] = [[i_main, 1 , [[0, strand]]]]
+                                        index[ra[j][i]] = [[i_main, 1 , [[positionStart, strand]]]]
                                     } else {
                                         let match = -1;
                                         for (let l = 0; l < index[ra[j][i]].length; l++) {
@@ -262,55 +278,62 @@ server.post('/index', function(req, res, next) {
                                             }
                                         }
                                         if (match < 0) {
-                                            index[ra[j][i]].push([i_main, 1, [[0, strand]] ]);                                                            
-                                            // index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
+                                            // index[ra[j][i]].push([i_main, 1, [[0, strand]] ]);                                                            
+                                            index[ra[j][i]].push([i_main, 1, [[positionStart, strand]] ]);                   
                                         } else {
-                                            index[ra[j][i]][match][2].push([0, strand])
-                                            // index[ra[j][i]][match][2].push([positionStart, strand]); 
+                                            // index[ra[j][i]][match][2].push([0, strand])
+                                            index[ra[j][i]][match][1] += 1;
+                                            index[ra[j][i]][match][2].push([positionStart, strand]); 
                                         }    
                                     }  
                                 }
                             }
                         }     
-        
             for (let kmer in index) {
                 newIndex.push({ k: kmer, d: index[kmer] });
-        }
+            }
             newIndex.push({ organism: ant[i] });
             newIndex.push({ seqLen: sequenceLength });
-        }
-        done({ index: newIndex }, input);
-        }).send({  sa: sa, organism: organism, kmerLength: kmerLength, rcsa: rcsa, i: i });
+        // }
+        done({ index: newIndex, i: i }, input);
+        }).send({  sa: sa, organism: organism, kmerLength: kmerLength, rcsa: rcsa, i: i_pool });
+    }
 
         pool
         .on('done', function(job, message) {
-        console.log('Job done:', message);     
+        console.log('Job done: {}');
         let organism = Buffer.from(message.index[message.index.length - 2].organism).toString('base64');
-        
-        // Use connect method to connect to the Server 
-        MongoClient.connect(url, function(err, db) {
-            assert.equal(null, err);
-            console.log("Connected correctly to server");
-            let collection = db.collection(`kmers_${i}_${organism}`);
-            //db.<collection(like a table)>('<tableName>');
-            collection.insertMany(message.index, function(err, result) {
-                assert.equal(err, null);
-                console.log("Updated the document");
-                db.close();
-                // res.sendStatus(200);
-            });  
-            message.index = null;
-        });
+        sendIndex(message.index, organism, message.i);
+        // console.log(message.index[message.index.length - 2].organism);
+        // console.log(message.i);
         })
         .on('error', function(job, error) {
-        console.error('Job errored:', job);
-        })
+            console.error('Job errored:', job);
+            })
         .on('finished', function() {
         console.log('Everything done, shutting down the thread pool.');
         pool.killAll();
         });
-    }
+   
 });
+
+
+function sendIndex(index, organism, i) {
+
+    MongoClient.connect(url, function(err, db) {
+        assert.equal(null, err);
+        console.log("Connected correctly to server");
+        let collection = db.collection(`kmers_${i}_${organism}`);
+        collection.insertMany(index, function(err, result) {
+            assert.equal(err, null);
+            console.log("Updated the document");
+            db.close();
+        });  
+    });
+}
+
+
+
 
 server.post('/query', function(req, res, next) {    
     MongoClient.connect(url, function(err, db) { 
@@ -355,24 +378,6 @@ server.post('/query', function(req, res, next) {
             };
             timeout();
         });
-             
-        // let collection = db.collection('gene_indexes');
-        // console.log(req.body.data);
-        // collection.find({k: { $in: req.body.data }},{_id: 0, k:1, d:1, strand:1}).toArray(function(err, result) {
-        //     assert.equal(err, null);
-        //     console.log("Found the following records");
-        //     console.log(result);
-        //     collection.findOne({'seqLen':{$ne:null}},{_id: 0, seqLen:1}, function(err, seqLen) {
-        //         assert.equal(err, null);
-        //         result.push(seqLen);
-        //         collection.findOne({'organisms': {$ne:null}},{_id: 0, organisms:1}, function(err, org) {
-        //             assert.equal(err, null);
-        //             result.push(org);
-        //             res.send(JSON.stringify(result));
-        //             db.close();
-        //         }); 
-        //     });
-        // });
     });
 });
 
