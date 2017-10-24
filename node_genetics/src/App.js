@@ -293,6 +293,7 @@ class App extends Component {
         // this.createRotations = this.createRotations.bind(this);
         this.handleChange = this.handleChange.bind(this); 
         this.saveSequence = this.saveSequence.bind(this);
+        this.updateKmerLength = this.updateKmerLength.bind(this);
 
     }
 
@@ -527,8 +528,14 @@ class App extends Component {
             // document.getElementById('indexProgress').style.display = 'none';
     }
 
+    updateKmerLength(kmer) {
+        console.log(kmer);
+        this.setState({ kmerLength: kmer });
+    }
+
     createIndexSpinner(db = null) {
-        // this.getPerformanceStats();
+        let kmer = document.getElementById('kmer-length').value;
+        this.updateKmerLength(kmer);
         document.getElementById('loader').style.display = '';
         // document.getElementById('indexProgress').value = 0;
         // document.getElementById('indexProgress').style.display = '';
@@ -648,8 +655,9 @@ class App extends Component {
 
                 <div className="indexing-querying" id="indexing-querying"> 
                     <div className="indexing">
-                        <h2 className="heading">Indexing</h2><br/><br/>
-                        <button className='buttn' id="mainBttn" onClick={ this.createIndexSpinner }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button><br/>
+                        <h2 className="heading">Indexing</h2><br/>
+                        <button className='buttn' id="mainBttn" onClick={ this.createIndexSpinner }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button>
+                        <label>&emsp;k-mer size: &nbsp;</label><input id="kmer-length" style={{ width: '20px'}}/><br/><br/>
                         {/* <progress id="indexProgress" max="1" value="0" style={{display: 'none'}}></progress> */}
                         {/* <label style={{ paddingLeft: '40px' }} id="index-timer"></label> */}
                         <div id="index-timer" style={{ display: 'none' }}>
