@@ -688,8 +688,8 @@ class App extends Component {
                     <button className='buttn' onClick={ this.onPrint } style={{ marginBottom: '40px', marginTop: '20px', width: '200px' }}>Print Results to PDF</button>
                     <button id="show-gene-prod" className='buttn' onClick={ this.showGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px' }}>Show Gene Products</button>
                     <button id="hide-gene-prod" className='buttn' onClick={ this.hideGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px', display: 'none' }}>Hide Gene Products</button>
-                    <button id="eval" className='buttn' onClick={ this.evaluateResults } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '150px' }}>Evaluate Results</button>
-                    <button id="hide-eval" className='buttn' onClick={ this.hideEval } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '150px' }}>Hide Evaluation</button>
+                    <button id="eval" className='buttn' onClick={ this.evaluateResults } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px' }}>Efficiency Stats</button>
+                    <button id="hide-eval" className='buttn' onClick={ this.hideEval } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '200px' }}>Hide Efficiency Stats</button>
                 </div>
                     <div id="results-list">
                         <ResultList results={ this.state.results } />

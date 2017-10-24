@@ -37,7 +37,6 @@ let a = 0;
             {orgInd}
             {/* <label>Index Size: </label>  */}
             <hr id="line" style={{ width: '500px', float: 'left' }}/><br/>
-            <h3>Efficacy</h3> 
         </div>
     );
 };

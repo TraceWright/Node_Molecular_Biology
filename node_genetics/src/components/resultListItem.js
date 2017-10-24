@@ -13,8 +13,15 @@ const ResultListItem = ({result}) => {
     });
     const on = 'Organism: ';
     const sl = 'Sequence Length: ';
-    const organismName = `${result[0].organism}`;
-    const sequenceLength = `${result[0].seqLength} base pairs`;
+    let organismName = '';
+    let sequenceLength = '';
+    if (result.length > 0) {
+        organismName = `${result[0].organism}`;
+        sequenceLength = `${result[0].seqLength} base pairs`;
+    } else {
+        organismName = '';
+        sequenceLength = '';
+    }
 
    return (
        // <div>this</div>
