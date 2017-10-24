@@ -238,7 +238,7 @@ server.post('/index', function(req, res, next) {
             newIndex.push({ organism: ant[i] });
             newIndex.push({ seqLen: sequenceLength });
 
-        done({ index: newIndex, i: i }, input);
+        done({ index: newIndex, i: i, kmerLength: kmerLength }, input);
         }).send({  sa: sa, organism: organism, kmerLength: kmerLength, rcsa: rcsa, i: i_pool });
     }
 
@@ -246,7 +246,7 @@ server.post('/index', function(req, res, next) {
         .on('done', function(job, message) {
         console.log('Job done: {}');
         let organism = Buffer.from(message.index[message.index.length - 2].organism).toString('base64');
-        sendIndex(message.index, organism, message.i);
+        sendIndex(message.index, organism, message.i, message.kmerLength);
         })
         .on('error', function(job, error) {
             console.error('Job errored:', job);
@@ -260,12 +260,12 @@ server.post('/index', function(req, res, next) {
 });
 
 
-function sendIndex(index, organism, i) {
+function sendIndex(index, organism, i, kmerLength) {
 
     MongoClient.connect(url, function(err, db) {
         assert.equal(null, err);
         console.log("Connected correctly to server");
-        let collection = db.collection(`kmers_${i}_${organism}`);
+        let collection = db.collection(`kmers_${kmerLength}_${organism}`);
         collection.insertMany(index, function(err, result) {
             assert.equal(err, null);
             console.log("Updated the document");

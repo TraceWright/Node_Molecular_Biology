@@ -81,7 +81,7 @@ function initVectors(queryTokens, uninvertedList, organisms, seqLen) {
                     k++
                     k === queryTokens.length ? j = uninvertedList.length : j = 0;
                 } else if (j === uninvertedList[i].length - 1) {
-                    vectors[i].push({ kmer: queryTokens[k], tf: 0, tfidf: 0 });
+                    vectors[i].push({ kmer: queryTokens[k], tf: 0, tfidf: 0, organism: organisms.organism, seqLength: seqLen.seqLen });
                     j = 0
                     k++
                 }
@@ -671,7 +671,7 @@ class App extends Component {
 
                     <div className="querying">
                         <h2 className="heading">Querying</h2><br/><br/>
-                        <textarea placeholder="Enter sequences with a length of 7 bases, separated by a space (eg. AATTCAG GCGCTTA AATTCAG)" type="text" id='queryInput' name="querySeq" onChange={ this.handleChange } value={ this.state.querySeq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
+                        <textarea placeholder="Enter kmer query (eg. AATTCAG GCGCTTA AATTCAG)" type="text" id='queryInput' name="querySeq" onChange={ this.handleChange } value={ this.state.querySeq } style={{float: 'left', height: '100px', width: '400px'}}></textarea>
                         <label id="querySeq" style={{float: 'left', textAlign: 'left', width: '380px', wordBreak: 'break-all', wordWrap: 'break-word', display: 'none'}}>{ this.state.querySeq }</label>
                         <br/><br/><br/><br/><br/><br/>
                         <button className="buttn" id="new-query-button" style={{float: 'right', marginTop: '20px', display: 'none'}} onClick={ this.newQuery }>New Query</button>
@@ -688,8 +688,8 @@ class App extends Component {
                     <button className='buttn' onClick={ this.onPrint } style={{ marginBottom: '40px', marginTop: '20px', width: '200px' }}>Print Results to PDF</button>
                     <button id="show-gene-prod" className='buttn' onClick={ this.showGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px' }}>Show Gene Products</button>
                     <button id="hide-gene-prod" className='buttn' onClick={ this.hideGeneProducts } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px', display: 'none' }}>Hide Gene Products</button>
-                    <button id="eval" className='buttn' onClick={ this.evaluateResults } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px' }}>Efficiency Stats</button>
-                    <button id="hide-eval" className='buttn' onClick={ this.hideEval } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '200px' }}>Hide Efficiency Stats</button>
+                    <button id="eval" className='buttn' onClick={ this.evaluateResults } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', width: '200px' }}>Efficiency Metrics</button>
+                    <button id="hide-eval" className='buttn' onClick={ this.hideEval } style={{ marginBottom: '40px', marginTop: '20px', marginLeft: '20px', display: 'none', width: '200px' }}>Hide Efficiency Metrics</button>
                 </div>
                     <div id="results-list">
                         <ResultList results={ this.state.results } />
