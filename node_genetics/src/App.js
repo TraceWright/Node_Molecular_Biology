@@ -10,12 +10,6 @@ const pdfConverter = require('jspdf');
 let semaphore = require('semaphore');
 const Pool = require('threads').Pool;
 
-// function matchesKmer(element, index, array){
-//     if (element.k === this) {
-//         return index;
-//     }
-// }
-
 function displayStats(results) {
     this.setState({ indexStats: results });
 }
@@ -288,9 +282,6 @@ class App extends Component {
         this.postData = this.postData.bind(this);        
         this.indexMain = this.indexMain.bind(this);   
         this.createIndexSpinner = this.createIndexSpinner.bind(this);  
-        // this.createIndex = this.createIndex.bind(this);
-        // this.tokeniseSequence = this.tokeniseSequence.bind(this);
-        // this.createRotations = this.createRotations.bind(this);
         this.handleChange = this.handleChange.bind(this); 
         this.saveSequence = this.saveSequence.bind(this);
         this.updateKmerLength = this.updateKmerLength.bind(this);
@@ -426,47 +417,6 @@ class App extends Component {
         }); 
       }
 
-    // displayTimer(time, uiElement) {
-    //   time.minutes > 0 ? uiElement.innerText = `${time.minutes}:${Math.round(time.seconds)} minutes`: uiElement.innerText = `${Math.round(time.seconds)} seconds`;
-    // }
-
-    // addTimes(timeOne, timeTwo) {
-    //     let minutes = timeOne.minutes + timeTwo.minutes;
-    //     let seconds = timeOne.seconds + timeTwo.seconds;
-    //     if (seconds > 60) {
-    //         seconds -= 60;
-    //         minutes += 1;
-    //     }
-    //     return { minutes: minutes, seconds: seconds };
-    // }
-
-    // createRotations(seqArr) {
-    //     let prev = '';
-    //     let rotationArr = [];
-    //     let ql = seqArr[0].length;
-
-    //     rotationArr[0] = seqArr;
-    //     for (let i = 1; i < ql; i++) {
-    //         rotationArr[i] = [];
-    //         prev = '';
-    //         for (let j = 0; j < seqArr.length - 1; j++) {
-    //             let current = seqArr[j].slice(0, ql-i);
-    //             rotationArr[i][j] = `${prev}${current}`
-    //             prev = seqArr[j].slice(ql-i, ql);
-    //           }      
-    //         }
-    //     return rotationArr;
-    // }
-
-    // tokeniseSequence(s) {
-    //     let tok = s.replace('/,/g' , '');
-    //     let len = this.state.kmerLength;
-    //     let regex = new RegExp(`.{1,${len}}`, "g");
-    //     let tokArray = tok.match(regex);
-    //     // let tokArray = tok.match(/.{1,7}/g);
-    //     return tokArray;
-    // }
-
     getSequenceLengths(sa) {
         let sequenceLengths = [];
         sa.forEach(function(element) {
@@ -525,7 +475,6 @@ class App extends Component {
                 //response
             }); 
             document.getElementById('loader').style.display = 'none';
-            // document.getElementById('indexProgress').style.display = 'none';
     }
 
     updateKmerLength(kmer) {
@@ -537,8 +486,6 @@ class App extends Component {
         let kmer = document.getElementById('kmer-length').value;
         this.updateKmerLength(kmer);
         document.getElementById('loader').style.display = '';
-        // document.getElementById('indexProgress').value = 0;
-        // document.getElementById('indexProgress').style.display = '';
         // Give the display some time to update before doing the main workload
         setTimeout(this.indexMain.bind(this, db), 500);
     }
@@ -658,8 +605,6 @@ class App extends Component {
                         <h2 className="heading">Indexing</h2><br/>
                         <button className='buttn' id="mainBttn" onClick={ this.createIndexSpinner }><i id="loader" className="loader" style={{ display: 'none', float: 'right' }}></i>Create Index &nbsp;</button>
                         <label>&emsp;k-mer size: &nbsp;</label><input id="kmer-length" style={{ width: '20px'}}/><br/><br/>
-                        {/* <progress id="indexProgress" max="1" value="0" style={{display: 'none'}}></progress> */}
-                        {/* <label style={{ paddingLeft: '40px' }} id="index-timer"></label> */}
                         <div id="index-timer" style={{ display: 'none' }}>
                             <br/>
                             <IndexTimer timer={ this.state.indexTime } />  
