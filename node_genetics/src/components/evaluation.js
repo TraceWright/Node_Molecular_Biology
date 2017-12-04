@@ -32,7 +32,7 @@ let a = 0;
         <div>
             <h3>Efficiency</h3>
             <label>Search Time: { props.searchTime } seconds</label><br/><br/>
-            <label id="index-time">Indexing Time: { props.indexTime }</label><br/><br/>
+            <label id="index-time">Indexing Time: { props.indexTime } seconds</label><br/><br/>
             <label id="index-stor">Index Sizes: </label><br/><br/>
             {orgInd}
             {/* <label>Index Size: </label>  */}
