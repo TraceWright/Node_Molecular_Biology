@@ -4,11 +4,8 @@ import ResultList from './components/resultList';
 import Evaluation from './components/evaluation';
 import SearchTimer from './components/searchTimer';
 import IndexTimer from './components/indexTimer';
-import * as dna from 'dna';
 const Client = require('node-rest-client').Client;
 const pdfConverter = require('jspdf');
-let semaphore = require('semaphore');
-const Pool = require('threads').Pool;
 
 function displayStats(results) {
     this.setState({ indexStats: results });
@@ -295,7 +292,7 @@ class App extends Component {
     }
 
     onPrint() {
-        const { results } = this.state.results;
+        // const { results } = this.state.results;
         var doc = new pdfConverter('p','pt','c6');
 
         var specialElementHandlers = {
@@ -462,7 +459,7 @@ class App extends Component {
         let indexSearchTime = Date.now();
         this.setState({ indexTimeStart: indexSearchTime });
         let sa = this.state.sequences;
-        let sequenceLengths = this.getSequenceLengths(sa);
+        // let sequenceLengths = this.getSequenceLengths(sa);
         
             var client = new Client();
             var args = {
