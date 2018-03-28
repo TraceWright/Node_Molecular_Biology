@@ -7,8 +7,9 @@ window.onload = function() {
   let notSupportedSeq = document.getElementById('not-supported-seq');
   
   seqInput.addEventListener('change', function(e) {
-      var file = seqInput.files[0];
-      var textType = /text.*/;
+    var file = seqInput.files[0];
+    var textType = /text.*/;
+    if (file) {
       if (file.type.match(textType)) {
           var reader = new FileReader();
           reader.onload = function(e) {
@@ -18,6 +19,7 @@ window.onload = function() {
       } else {
           notSupportedSeq.innerText = "File not supported!"
       }
+    }
   });
 }
 
