@@ -4,10 +4,11 @@
 
 .hmm-app {
   display: grid;
-  grid-template-columns: 100%;
+  grid-template-columns: 50%;
   grid-template-areas:
-  'ub'
-  'vtb'
+  'ub ub'
+  'vtb vtb'
+  'gtb itb'
 }
 
 .background {
@@ -91,5 +92,15 @@
 .viterbi {
   margin-top: 100px;
   grid-area: vtb;
+  margin: 10%;
+}
+
+.genome-table {
+  grid-area: gtb;
+  margin: 10%;
+}
+
+.island-table {
+  grid-area: itb;
   margin: 10%;
 }
