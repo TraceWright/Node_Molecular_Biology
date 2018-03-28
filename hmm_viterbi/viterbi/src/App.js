@@ -90,28 +90,67 @@ class App extends Component {
     let genome_prev = emission_genome * initProbGenome;
     let island_prev = emission_island * initProbIsland;
 
-    for (let i = 1, len = sequenceArray.length; i < len; i++) {
+    // for (let i = 1, len = sequenceArray.length; i < len; i++) {
+
+    //   // assign emission value for current base in sequenceArray
+    //   sequenceArray[i] === "A" | sequenceArray[i] === "T" ? emission_genome = emissionGen_AT : emission_genome = emissionGen_GC;
+    //   sequenceArray[i] === "A" | sequenceArray[i] === "T" ? emission_island = emissionCpG_AT : emission_island = emissionCpG_GC;
+
+    //   // multiply previous values with current base transition and emission values 
+    //   let comparative_value_gg = genome_prev * transitionGG * emission_genome;
+    //   let comparative_value_ig = island_prev * transitionIG * emission_genome;
+
+    //   let comparative_value_ii = island_prev * transitionII * emission_island;
+    //   let comparative_value_gi = genome_prev * transitionGI * emission_island;
+
+    //   comparative_value_gg > comparative_value_ig ? h_genome[i] = [comparative_value_gg, "G"] : h_genome[i] = [comparative_value_ig, "I"];
+    //   comparative_value_ii > comparative_value_gi ? h_island[i] = [comparative_value_ii, "I"] : h_island[i] = [comparative_value_gi, "G"];
+
+    //   genome_prev = h_genome[i][0];
+    //   island_prev = h_island[i][0];
+
+    //   console.log(i + " " + h_genome[i][1] + " genome: " + h_genome[i] + " base: " + sequenceArray[i]);
+    //   console.log(i + " " + h_island[i][1] + " island: " + h_island[i] + " base: " + sequenceArray[i]);
+    // }
+    let genomeTable = '';
+    // let islandTable;
+
+    let gt = sequenceArray.map((base) => {
 
       // assign emission value for current base in sequenceArray
-      sequenceArray[i] === "A" | sequenceArray[i] === "T" ? emission_genome = emissionGen_AT : emission_genome = emissionGen_GC;
-      sequenceArray[i] === "A" | sequenceArray[i] === "T" ? emission_island = emissionCpG_AT : emission_island = emissionCpG_GC;
+      base === "A" | base === "T" ? emission_genome = emissionGen_AT : emission_genome = emissionGen_GC;
+      base === "A" | base === "T" ? emission_island = emissionCpG_AT : emission_island = emissionCpG_GC;
 
       // multiply previous values with current base transition and emission values 
       let comparative_value_gg = genome_prev * transitionGG * emission_genome;
       let comparative_value_ig = island_prev * transitionIG * emission_genome;
-
       let comparative_value_ii = island_prev * transitionII * emission_island;
       let comparative_value_gi = genome_prev * transitionGI * emission_island;
 
-      comparative_value_gg > comparative_value_ig ? h_genome[i] = [comparative_value_gg, "G"] : h_genome[i] = [comparative_value_ig, "I"];
-      comparative_value_ii > comparative_value_gi ? h_island[i] = [comparative_value_ii, "I"] : h_island[i] = [comparative_value_gi, "G"];
+      comparative_value_gg > comparative_value_ig ? h_genome = [comparative_value_gg, "G"] : h_genome = [comparative_value_ig, "I"];
+      comparative_value_ii > comparative_value_gi ? h_island = [comparative_value_ii, "I"] : h_island = [comparative_value_gi, "G"];
 
-      genome_prev = h_genome[i][0];
-      island_prev = h_island[i][0];
+      genome_prev = h_genome[0];
+      island_prev = h_island[0];
 
-      console.log(i + " " + h_genome[i][1] + " genome: " + h_genome[i] + " base: " + sequenceArray[i]);
-      console.log(i + " " + h_island[i][1] + " island: " + h_island[i] + " base: " + sequenceArray[i]);
-    }
+      // console.log(h_genome[1] + " genome: " + h_genome + " base: " + base);
+      // console.log(h_island[1] + " island: " + h_island + " base: " + base);
+
+      genomeTable = `<tr>${h_genome[0]}  ${h_genome[1]}<tr/>`;
+
+      console.log(genomeTable);
+
+      return { genome: h_genome, island: h_island };
+    })
+    console.log(gt);
+    // let table = document.getElementById('genome-table');
+    // table.innerHTML = gt;
+    // .map((element) => {
+    //   console.log(element);
+    // }
+
+    // )
+
 
     // console.log("genome: " + h_genome);
     // console.log("island: " + h_island);
@@ -129,6 +168,7 @@ class App extends Component {
 
           <div className="viterbi">
             <button onClick={ this.viterbi }>Viterbi</button>
+            <table id="genome-table"></table>
           </div>
 
           <div className="file-uploads" style={ this.state.toggleUploadView ? { display: 'grid' } : {} }> 

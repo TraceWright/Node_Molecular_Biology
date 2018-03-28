@@ -2,6 +2,14 @@
   text-align: center;
 }
 
+.hmm-app {
+  display: grid;
+  grid-template-columns: 100%;
+  grid-template-areas:
+  'ub'
+  'vtb'
+}
+
 .background {
   height: stretch;
   background: linear-gradient(
@@ -20,7 +28,7 @@
   padding-top: 30px;
   padding-left: 50px;
   text-align: left;
-  display: none
+  display: none;
 }
 
 .uploaded-sequence {
@@ -48,7 +56,8 @@
 }
 
 .upload-back {
-  height: '60px'
+  height: '60px';
+  grid-area: ub;
 }
 
 .text-area {
@@ -81,4 +90,6 @@
 
 .viterbi {
   margin-top: 100px;
+  grid-area: vtb;
+  margin: 10%;
 }
