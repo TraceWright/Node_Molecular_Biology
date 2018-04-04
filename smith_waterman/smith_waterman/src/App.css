@@ -1,0 +1,107 @@
+.App {
+  text-align: center;
+}
+
+.sw-app {
+  display: grid;
+  grid-template-columns: 100%;
+  grid-template-areas:
+  'ub'
+  'sw'
+  'qi'
+  'rd'
+}
+
+.background {
+  height: stretch;
+  background: linear-gradient(
+    rgba(255, 255, 255, 0.50), 
+    rgba(255, 255, 255, 0.50)),
+    url("genetics_background_2.png");
+  background-position: cover;
+}
+
+.file-uploads {
+  display: grid;  
+  grid-gap: 10px;
+  width: 1200px;
+  margin: auto;
+  padding-top: 20px;
+  padding-top: 30px;
+  padding-left: 50px;
+  text-align: left;
+  display: none
+}
+
+.uploaded-sequence {
+  grid-area: upld;
+  float: left; 
+  padding-left: 50px;
+}
+
+.input-files {
+  grid-area: input;
+}
+
+.file-uploads {
+  grid-template-columns: 20% 20% 20% 20%;
+  grid-template-areas: 
+  'upld upld input input'
+}
+
+.bttn {
+  background: transparent;
+  height: 30px;
+  font-weight: bold;
+  font-size: 15px;
+  color: #555555;
+}
+
+.upload-back {
+  height: '60px'
+}
+
+.text-area {
+  height: 80vh;
+  width: 100%;
+}
+
+.file-up-btn {
+  float: left;
+  margin-top: 20px; 
+  margin-left: 20px;
+}
+
+.back-btn {
+  float: left;
+  margin-top: 20px;
+  margin-left: 20px;
+  display: none;
+}
+
+.input-files-btn {
+  margin-top: 20px; 
+  float: left
+}
+
+.submit-btn {
+  margin-top: 20px; 
+  margin-left: 50px 
+}
+
+.smith-waterman {
+  margin-top: 20px;
+  grid-area: sw;
+  margin-left: 10%;
+}
+
+.query-input {
+  margin-top: 20px;
+  grid-area: qi;
+  margin-left: 10%;
+}
+
+.results-display {
+  grid-area: rd;
+  margin-left: 10%;
+}
